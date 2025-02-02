@@ -431,6 +431,11 @@ extern "C" MODULE_API void yespowerLTNCG_export(const char *input, char *output,
     yespowerLTNCG_hash(input, output, input_len);
 }
 
+extern "C" MODULE_API void yespowerMGPC_export(const char *input, char *output, uint32_t input_len)
+{
+    yespowerMGPC_hash(input, output, input_len);
+}
+
 extern "C" MODULE_API void yespowerR16_export(const char *input, char *output, uint32_t input_len)
 {
     yespowerR16_hash(input, output, input_len);

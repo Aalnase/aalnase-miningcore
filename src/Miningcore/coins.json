@@ -2682,6 +2682,35 @@
         "explorerTxLink": "https://explorer.crionic.org/tx/{0}",
         "explorerAccountLink": "https://explorer.crionic.org/address/{0}"
     },
+    "magpiecoin": {
+        "name": "MagPieCoin",
+        "canonicalName": "MagPieCoin",
+        "symbol": "MGPC",
+        "family": "bitcoin",
+        "website": "http://magpiecoin.animalcoins.top/",
+        "twitter": "https://twitter.com/mareels1",
+        "telegram": "",
+        "discord": "https://discord.gg/jBx52PNxdp",
+        "coinbaseHasher": {
+            "hash": "sha256d"
+        },
+        "headerHasher": {
+            "hash": "yespowermgpc"
+        },
+        "blockHasher": {
+            "hash": "reverse",
+            "args": [
+                {
+                    "hash": "sha256d"
+                }
+            ]
+        },
+        "shareMultiplier": 65536,
+        "coinbaseMinConfimations": 340,
+        "explorerBlockLink": "http://mgpcexplorer.animalcoins.top:3030/block/$height$",
+        "explorerTxLink": "http://mgpcexplorer.animalcoins.top:3030/tx/{0}",
+        "explorerAccountLink": "http://mgpcexplorer.animalcoins.top:3030/address/{0}"
+    },
     "rosecoin": {
         "name": "Rosecoin",
         "symbol": "ROC",
