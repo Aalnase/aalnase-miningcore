@@ -2487,6 +2487,103 @@
         "explorerTxLink": "https://explorer.firo.org/tx/{0}",
         "explorerAccountLink": "https://explorer.firo.org/address/{0}"
     },
+    "kiirocoin": {
+        "name": "KiiroCoin",
+        "symbol": "KIIRO",
+        "family": "progpow",
+        "progpower": "firopow",
+        "website": "https://kiirocoin.org/",
+        "market": "https://coinpaprika.com/coin/kiiro-kiirocoin",
+        "twitter": "https://twitter.com/kiirocoin",
+        "telegram": "https://t.me/kiirocoin",
+        "discord": "https://discord.com/invite/yFbbrtPscq",
+        "coinbaseHasher": {
+            "hash": "sha256d"
+        },
+        "headerHasher": {
+            "hash": "sha256d"
+        },
+        "blockHasher": {
+            "hash": "reverse",
+            "args": [
+                {
+                    "hash": "sha256d"
+                }
+            ]
+        },
+        "hasCommunity": true,
+        "hasDeveloper": true,
+        "hasDataMining": true,
+        "hasMasterNodes": true,
+        "shareMultiplier": 1,
+        "explorerBlockLink": "https://explorer.kiirocoin.org/block/$hash$",
+        "explorerTxLink": "https://explorer.kiirocoin.org/tx/{0}",
+        "explorerAccountLink": "https://explorer.kiirocoin.org/address/{0}"
+    },
+    "realichain": {
+        "name": "Realichain",
+        "symbol": "REALI",
+        "family": "progpow",
+        "progpower": "firopow",
+        "website": "https://realichain.org/",
+        "github": "https://github.com/Realichain/realichain",
+        "market": "",
+        "twitter": "",
+        "telegram": "",
+        "discord": "https://discord.gg/JnSJRtnwQq",
+        "coinbaseHasher": {
+            "hash": "sha256d"
+        },
+        "headerHasher": {
+            "hash": "sha256d"
+        },
+        "blockHasher": {
+            "hash": "reverse",
+            "args": [
+                {
+                    "hash": "sha256d"
+                }
+            ]
+        },
+        "hasCommunity": true,
+        "hasDeveloper": true,
+        "hasDataMining": true,
+        "hasMasterNodes": true,
+        "shareMultiplier": 1,
+        "explorerBlockLink": "https://blockscan.realichain.org/block/$hash$",
+        "explorerTxLink": "https://blockscan.realichain.org/tx/{0}",
+        "explorerAccountLink": "https://blockscan.realichain.org/address/{0}"
+    },
+    "telestai": {
+        "name": "Telestai",
+        "symbol": "TLS",
+        "family": "progpow",
+        "progpower": "meraki",
+        "website": "https://www.telestai.io/",
+        "market": "",
+        "twitter": "https://x.com/Telestai_io",
+        "telegram": "",
+        "discord": "https://discord.gg/VmFXfHnZE5",
+        "coinbaseHasher": {
+            "hash": "sha256d"
+        },
+        "headerHasher": {
+            "hash": "sha256d"
+        },
+        "blockHasher": {
+            "hash": "reverse",
+            "args": [
+                {
+                    "hash": "sha256d"
+                }
+            ]
+        },
+        "hasFounderFee": true,
+        "shareMultiplier": 1,
+        "explorerBlockLink": "https://telestai.cryptoscope.io/block/?blockhash=$hash$",
+        "explorerTxLink": "https://telestai.cryptoscope.io/tx/?txid={0}",
+        "explorerAccountLink": "https://telestai.cryptoscope.io/address/?address={0}"
+    },
     "neurai": {
         "name": "Neurai",
         "symbol": "XNA",

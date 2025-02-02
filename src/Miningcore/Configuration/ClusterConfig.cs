@@ -256,6 +256,15 @@ public partial class BitcoinTemplate : CoinTemplate
     [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
     public bool HasCoinbaseStakingReward { get; set; }
 
+    [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+    public bool HasCommunity { get; set; }
+
+    [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+    public bool HasDataMining { get; set; }
+
+    [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+    public bool HasDeveloper { get; set; }
+
     [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
     [DefaultValue(1.0d)]
     public double ShareMultiplier { get; set; } = 1.0d;

@@ -261,6 +261,15 @@ public class BitcoinJob
         if(coin.HasCoinbaseStakingReward)
             rewardToPool = CreateCoinbaseStakingRewardOutputs(tx, rewardToPool);
 
+        if(coin.HasCommunity)
+            rewardToPool = CreateCommunityOutputs(tx, rewardToPool);
+
+        if(coin.HasDataMining)
+            rewardToPool = CreateDataMiningOutputs(tx, rewardToPool);
+
+        if(coin.HasDeveloper)
+            rewardToPool = CreateDeveloperOutputs(tx, rewardToPool);
+
         // Remaining amount goes to pool
         tx.Outputs.Add(rewardToPool, poolAddressDestination);
 
@@ -659,6 +668,111 @@ public class BitcoinJob
 
     #endregion // CoinbaseStakingReward
 
+    #region Community
+
+    protected CommunityBlockTemplateExtra communityParameters;
+
+    protected virtual Money CreateCommunityOutputs(Transaction tx, Money reward)
+    {
+        if (communityParameters.Community != null)
+        {
+            Community[] communitys;
+            if (communityParameters.Community.Type == JTokenType.Array)
+                communitys = communityParameters.Community.ToObject<Community[]>();
+            else
+                communitys = new[] { communityParameters.Community.ToObject<Community>() };
+
+            if(communitys != null)
+            {
+                foreach(var Community in communitys)
+                {
+                    if(!string.IsNullOrEmpty(Community.Script))
+                    {
+                        Script payeeAddress = new (Community.Script.HexToByteArray());
+                        var payeeReward = Community.Amount;
+
+                        tx.Outputs.Add(payeeReward, payeeAddress);
+                        reward -= payeeReward;
+                    }
+                }
+            }
+        }
+
+        return reward;
+    }
+
+    #endregion //Community
+
+    #region DataMining
+
+    protected DataMiningBlockTemplateExtra dataminingParameters;
+
+    protected virtual Money CreateDataMiningOutputs(Transaction tx, Money reward)
+    {
+        if (dataminingParameters.DataMining != null)
+        {
+            DataMining[] dataminings;
+            if (dataminingParameters.DataMining.Type == JTokenType.Array)
+                dataminings = dataminingParameters.DataMining.ToObject<DataMining[]>();
+            else
+                dataminings = new[] { dataminingParameters.DataMining.ToObject<DataMining>() };
+
+            if(dataminings != null)
+            {
+                foreach(var DataMining in dataminings)
+                {
+                    if(!string.IsNullOrEmpty(DataMining.Script))
+                    {
+                        Script payeeAddress = new (DataMining.Script.HexToByteArray());
+                        var payeeReward = DataMining.Amount;
+
+                        tx.Outputs.Add(payeeReward, payeeAddress);
+                        //reward -= payeeReward;
+                    }
+                }
+            }
+        }
+
+        return reward;
+    }
+
+    #endregion //DataMining
+
+    #region Developer
+
+    protected DeveloperBlockTemplateExtra developerParameters;
+
+    protected virtual Money CreateDeveloperOutputs(Transaction tx, Money reward)
+    {
+        if (developerParameters.Developer != null)
+        {
+            Developer[] developers;
+            if (developerParameters.Developer.Type == JTokenType.Array)
+                developers = developerParameters.Developer.ToObject<Developer[]>();
+            else
+                developers = new[] { developerParameters.Developer.ToObject<Developer>() };
+
+            if(developers != null)
+            {
+                foreach(var Developer in developers)
+                {
+                    if(!string.IsNullOrEmpty(Developer.Script))
+                    {
+                        Script payeeAddress = new (Developer.Script.HexToByteArray());
+                        var payeeReward = Developer.Amount;
+
+                        tx.Outputs.Add(payeeReward, payeeAddress);
+                        reward -= payeeReward;
+                    }
+                }
+            }
+        }
+
+        return reward;
+    }
+
+    #endregion //Developer
+
     #region API-Surface
 
     public BlockTemplate BlockTemplate { get; protected set; }
@@ -743,6 +857,15 @@ public class BitcoinJob
 
         if (coin.HasCoinbaseStakingReward)
             coinbaseStakingRewardParameters = BlockTemplate.Extra.SafeExtensionDataAs<CoinbaseStakingRewardTemplateExtra>("coinbasetxn", "stakingrewards");
+
+        if(coin.HasCommunity)
+            communityParameters = BlockTemplate.Extra.SafeExtensionDataAs<CommunityBlockTemplateExtra>();
+
+        if(coin.HasDataMining)
+            dataminingParameters = BlockTemplate.Extra.SafeExtensionDataAs<DataMiningBlockTemplateExtra>();
+
+        if(coin.HasDeveloper)
+            developerParameters = BlockTemplate.Extra.SafeExtensionDataAs<DeveloperBlockTemplateExtra>();
 
         this.coinbaseHasher = coinbaseHasher;
         this.headerHasher = headerHasher;
