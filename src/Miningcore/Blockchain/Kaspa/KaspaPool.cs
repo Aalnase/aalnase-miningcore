@@ -167,6 +167,7 @@ public class KaspaPool : PoolBase
 
             // extract control vars from password
             var staticDiff = GetStaticDiffFromPassparts(passParts);
+			var startDiff = GetStartDiffFromPassparts(passParts);
 
             // Nicehash support
             var nicehashDiff = await GetNicehashStaticMinDiff(context, coin.Name, coin.GetAlgorithmName());
@@ -185,9 +186,7 @@ public class KaspaPool : PoolBase
             }
 
             // Static diff
-            if(staticDiff.HasValue &&
-               (context.VarDiff != null && staticDiff.Value >= context.VarDiff.Config.MinDiff ||
-                   context.VarDiff == null && staticDiff.Value > context.Difficulty))
+            if(staticDiff.HasValue && !startDiff.HasValue && (context.VarDiff != null && staticDiff.Value >= context.VarDiff.Config.MinDiff || context.VarDiff == null && staticDiff.Value > context.Difficulty))
             {
                 // There are several reports of IDIOTS mining with ridiculous amount of hashrate and maliciously using a very low staticDiff in order to attack mining pools.
                 // StaticDiff is now disabled by default for the KASPA family. Use it at your own risks.
@@ -200,6 +199,13 @@ public class KaspaPool : PoolBase
                     logger.Info(() => $"[{connection.ConnectionId}] Setting static difficulty of {staticDiff.Value}");
                 else
                     logger.Warn(() => $"[{connection.ConnectionId}] Requesting static difficulty of {staticDiff.Value} (Request has been ignored and instead used as 'initial difficulty' for varDiff)");
+            }
+
+			// Start diff
+            if(startDiff.HasValue && (context.VarDiff != null && startDiff.Value >= context.VarDiff.Config.MinDiff || context.VarDiff == null && startDiff.Value > context.Difficulty))
+            {
+                context.SetDifficulty(startDiff.Value);
+                logger.Info(() => $"[{connection.ConnectionId}] Start difficulty set to {startDiff.Value}");
             }
 
             var minerJobParams = CreateWorkerJob(connection);
