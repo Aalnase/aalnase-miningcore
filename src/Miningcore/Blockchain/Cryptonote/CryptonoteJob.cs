@@ -36,6 +36,7 @@ public class CryptonoteJob
     {
         { CryptonightHashType.RandomX, (realm, seedHex, data, result, _) => RandomX.CalculateHash(realm, seedHex, data, result) },
         { CryptonightHashType.RandomARQ, (realm, seedHex, data, result, _) => RandomARQ.CalculateHash(realm, seedHex, data, result) },
+        { CryptonightHashType.Panthera, (realm, seedHex, data, result, _) => Panthera.CalculateHash(realm, seedHex, data, result) },
         { CryptonightHashType.Cryptonight0, (_, _, data, result, height) => Cryptonight.CryptonightHash(data, result, CN_0, height) },
         { CryptonightHashType.Cryptonight1, (_, _, data, result, height) => Cryptonight.CryptonightHash(data, result, CN_1, height) },
         { CryptonightHashType.Cryptonight2, (_, _, data, result, height) => Cryptonight.CryptonightHash(data, result, CN_2, height) },
@@ -211,7 +212,7 @@ public class CryptonoteJob
             Span<byte> blockHash = stackalloc byte[32];
             
             // Not all Cryptonote coins are equal
-            if(blobType == ZephyrConstants.BlobType)
+            if(blobType == ZephyrConstants.BlobType || blobType == ScalaConstants.ScalaBlobType)
                 CryptonoteBindings.GetBlockId(blob, blockHash, blobType);
             else
                 ComputeBlockHash(blobConverted, blockHash);

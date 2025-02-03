@@ -53,6 +53,11 @@ public static class MoreloConstants
     public const decimal MoreloStaticTransactionFeeReserve = 1.0m; // Deduct static reserve for tx fees
 }
 
+public static class ScalaConstants
+{
+    public const int ScalaBlobType = 14;
+}
+
 public static class ZephyrConstants
 {
     public const int BlobType = 13;
