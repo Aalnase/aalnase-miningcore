@@ -562,6 +562,10 @@ public partial class CryptonoteCoinTemplate : CoinTemplate
     [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
     [DefaultValue(1.0d)]
     public decimal BlockrewardMultiplier { get; set; }
+
+    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+    public int? CoinbaseMinConfimations { get; set; }
+	
 }
 
 public enum EquihashSubfamily
