@@ -2584,6 +2584,36 @@
         "explorerTxLink": "https://explorer.blobfishcoin.meme/tx/{0}",
         "explorerAccountLink": "https://explorer.blobfishcoin.meme/address/{0}"
     },
+    "dogegpu": {
+        "name": "DogeGPU",
+        "symbol": "DOGPU",
+        "family": "progpow",
+        "progpower": "kawpow",
+        "website": "https://dogegpu.org/",
+        "github": "https://github.com/Masterscooper/DogeGPU",
+        "market": "",
+        "twitter": "https://x.com/dogegpu",
+        "telegram": "",
+        "discord": "https://discord.gg/Vg8WDug6Yb",
+        "coinbaseHasher": {
+            "hash": "sha256d"
+        },
+        "headerHasher": {
+            "hash": "sha256d"
+        },
+        "blockHasher": {
+            "hash": "reverse",
+            "args": [
+                {
+                    "hash": "sha256d"
+                }
+            ]
+        },
+        "shareMultiplier": 1,
+        "explorerBlockLink": "https://dogpu.cryptoscope.io/block/?blockhash=$hash$",
+        "explorerTxLink": "https://dogpu.cryptoscope.io/tx/?txid={0}",
+        "explorerAccountLink": "https://dogpu.cryptoscope.io/address/?address={0}"
+    },
     "ravencash": {
         "name": "Ravencash",
         "symbol": "RVH",
