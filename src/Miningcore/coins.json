@@ -2894,6 +2894,36 @@
         "explorerTxLink": "https://exploreblockchain.clore.ai/tx/{0}",
         "explorerAccountLink": "https://exploreblockchain.clore.ai/address/{0}"
     },
+    "cmusicai": {
+        "name": "CmusicAI",
+        "symbol": "CMS",
+        "family": "progpow",
+        "progpower": "kawpow",
+        "website": "https://cmusic.ai/",
+        "market": "https://www.coingecko.com/en/coins/cmusicai",
+        "twitter": "https://twitter.com/cmusicai",
+        "telegram": "",
+        "discord": "https://discord.com/invite/EanhmGKxcg",
+        "coinbaseHasher": {
+            "hash": "sha256d"
+        },
+        "headerHasher": {
+            "hash": "sha256d"
+        },
+        "blockHasher": {
+            "hash": "reverse",
+            "args": [
+                {
+                    "hash": "sha256d"
+                }
+            ]
+        },
+        "hasCommunityAddress": true,
+        "shareMultiplier": 1,
+        "explorerBlockLink": "https://explorer.cmusic.ai/block/$hash$",
+        "explorerTxLink": "https://explorer.cmusic.ai/tx/{0}",
+        "explorerAccountLink": "https://explorer.cmusic.ai/address/{0}"
+    },
     "meowcoin": {
         "name": "Meowcoin",
         "symbol": "MEWC",
@@ -3032,6 +3062,45 @@
       "explorerBlockLink": "https://explorer.novochain.ovh/block/$height$",
       "explorerTxLink": "https://explorer.novochain.ovh/tx/{0}",
       "explorerAccountLink": "https://explorer.novochain.ovh/address/{0}"
+    },
+    "ogva": {
+        "name": "OGVA Network",
+        "symbol": "OGVA",
+        "family": "bitcoin",
+        "website": "https://ogva.net/",
+        "github": "https://github.com/ogvanetwork/ogva-core",
+        "market": "",
+        "twitter": "https://x.com/Ogva_network",
+        "telegram": "https://t.me/ogvanetwork",
+        "discord": "https://discord.gg/Z3FKGuzKXv",
+        "coinbaseHasher": {
+            "hash": "sha256d"
+        },
+        "headerHasher": {
+            "hash": "neoscrypt",
+            "args": [
+                0
+            ]
+        },
+        "blockHasher": {
+            "hash": "reverse",
+            "args": [
+                {
+                    "hash": "neoscrypt",
+                    "args": [
+                        0
+                    ]
+                }
+            ]
+        },
+        "hasFounderFee": true,
+        "hasMasterNodes": true,
+        "hasCommunity": true,
+        "hasDeveloper": true,
+        "shareMultiplier": 65536,
+        "explorerBlockLink": "https://explorer.ogva.net/block/$hash$",
+        "explorerTxLink": "https://explorer.ogva.net/tx/{0}",
+        "explorerAccountLink": "https://explorer.ogva.net/address/{0}"
     },
     "plexhive": {
         "name": "PlexHive",
