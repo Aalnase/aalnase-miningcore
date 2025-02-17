@@ -355,6 +355,9 @@ public class BitcoinJob
         if(coin.HasDeveloper)
             rewardToPool = CreateDeveloperOutputs(tx, rewardToPool);
 
+        if(coin.HasFoundation)
+            rewardToPool = CreateFoundationOutputs(tx, rewardToPool);
+
         // Remaining amount goes to pool
         tx.Outputs.Add(rewardToPool, poolAddressDestination);
 
@@ -858,6 +861,40 @@ public class BitcoinJob
 
     #endregion //Developer
 
+    #region Foundation
+
+    protected FoundationBlockTemplateExtra foundationParameters;
+
+    protected virtual Money CreateFoundationOutputs(Transaction tx, Money reward)
+    {
+        if(foundationParameters.Foundation != null)
+        {
+            Foundation[] foundations;
+            if(foundationParameters.Foundation.Type == JTokenType.Array)
+                foundations = foundationParameters.Foundation.ToObject<Foundation[]>();
+            else
+                foundations = new[] { foundationParameters.Foundation.ToObject<Foundation>() };
+
+            if(foundations != null)
+            {
+                foreach(var Foundation in foundations)
+                {
+                    if(!string.IsNullOrEmpty(Foundation.Payee))
+                    {
+                        var payeeAddress = BitcoinUtils.AddressToDestination(Foundation.Payee, network);
+                        var payeeReward = Foundation.Amount;
+
+                        tx.Outputs.Add(payeeReward, payeeAddress);
+                        reward -= payeeReward;
+                    }
+                }
+            }
+        }
+        return reward;
+    }
+
+    #endregion // Foundation
+
     #region API-Surface
 
     public BlockTemplate BlockTemplate { get; protected set; }
@@ -951,6 +988,9 @@ public class BitcoinJob
 
         if(coin.HasDeveloper)
             developerParameters = BlockTemplate.Extra.SafeExtensionDataAs<DeveloperBlockTemplateExtra>();
+
+        if (coin.HasFoundation)
+            foundationParameters = BlockTemplate.Extra.SafeExtensionDataAs<FoundationBlockTemplateExtra>();
 
         this.coinbaseHasher = coinbaseHasher;
         this.headerHasher = headerHasher;
