@@ -52,7 +52,6 @@ public class CryptonotePayoutHandler : PayoutHandlerBase,
     private CryptonoteNetworkType? networkType;
     private CryptonotePoolPaymentProcessingConfigExtra extraConfig;
     private bool walletSupportsTransferSplit;
-    private int PayoutMinBlockConfirmations;
 	
     protected override string LogCategory => "Cryptonote Payout Handler";
 
@@ -390,8 +389,6 @@ public class CryptonotePayoutHandler : PayoutHandlerBase,
         clusterConfig = cc;
         extraConfig = pc.PaymentProcessing.Extra.SafeExtensionDataAs<CryptonotePoolPaymentProcessingConfigExtra>();
 
-		var coin = poolConfig.Template.As<CryptonoteCoinTemplate>();
-		PayoutMinBlockConfirmations = coin?.CoinbaseMinConfimations ?? CryptonoteConstants.PayoutMinBlockConfirmations;
 		logger = LogUtil.GetPoolScopedLogger(typeof(CryptonotePayoutHandler), pc);
 
         // configure standard daemon
@@ -477,6 +474,7 @@ public class CryptonotePayoutHandler : PayoutHandlerBase,
                 var blockHeader = rpcResult.Response.BlockHeader;
 
                 // update progress
+				int PayoutMinBlockConfirmations = coin?.CoinbaseMinConfimations ?? CryptonoteConstants.PayoutMinBlockConfirmations;
                 block.ConfirmationProgress = Math.Min(1.0d, (double) blockHeader.Depth / PayoutMinBlockConfirmations);
                 result.Add(block);
 

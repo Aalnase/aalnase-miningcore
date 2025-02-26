@@ -530,6 +530,10 @@ public class CryptonoteJobManager : JobManagerBase<CryptonoteJob>
     {
         var response = await rpc.ExecuteAsync<GetInfoResponse>(logger, CryptonoteCommands.GetInfo, ct);
 
+        // update stats
+        if(!string.IsNullOrEmpty(response?.Response.Version))
+            BlockchainStats.NodeVersion = response?.Response.Version;
+
         return response.Error == null && response.Response != null &&
             (response.Response.OutgoingConnectionsCount + response.Response.IncomingConnectionsCount) > 0;
     }
