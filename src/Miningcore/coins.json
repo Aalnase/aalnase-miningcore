@@ -3576,6 +3576,35 @@
         "explorerTxLink": "https://be.rosebird.org/tx/{0}",
         "explorerAccountLink": "https://be.rosebird.org/address/{0}"
     },
+    "skydoge": {
+        "name": "Skydoge",
+        "canonicalName": "Skydoge",
+        "symbol": "SKYDOGE",
+        "family": "bitcoin",
+        "website": "https://skydoge.net/",
+        "market": "",
+        "twitter": "https://twitter.com/skydogenet",
+        "telegram": "https://t.me/skydoge_net",
+        "discord": "https://discord.com/invite/GKHGDGbt8S",
+        "coinbaseHasher": {
+            "hash": "sha256d"
+        },
+        "headerHasher": {
+            "hash": "skydoge"
+        },
+        "blockHasher": {
+            "hash": "reverse",
+            "args": [
+                {
+                    "hash": "skydoge"
+                }
+            ]
+        },
+        "coinbaseTxVersion": 9,
+        "explorerBlockLink": "https://explorer.skydoge.net/block/$hash$",
+        "explorerTxLink": "https://explorer.skydoge.net/tx/{0}",
+        "explorerAccountLink": "https://explorer.skydoge.net/address/{0}"
+    },
     "stakecube": {
         "name": "StakeCube",
         "canonicalName": "Stakecube",
