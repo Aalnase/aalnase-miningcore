@@ -2798,6 +2798,35 @@
         "explorerTxLink": "https://fewbit.online/tx/{0}",
         "explorerAccountLink": "https://fewbit.online/address/{0}"
     },
+    "lightningcashr": {
+        "name": "LightningCash-R",
+        "canonicalName": "LightningCash-R",
+        "symbol": "LNCR",
+        "family": "bitcoin",
+        "website": "https://lightningcash-reborn.space/",
+        "github": "https://github.com/MerlinMagic2018/LightningCash-R",
+        "twitter": "",
+        "market": "https://coinpaprika.com/coin/lncr-lightningcash-reborn/",
+        "discord": "https://discord.com/invite/WrMVXcA8bt",
+        "coinbaseHasher": {
+            "hash": "sha256d"
+        },
+        "headerHasher": {
+            "hash": "yespowerltncg"
+        },
+        "blockHasher": {
+            "hash": "reverse",
+            "args": [
+                {
+                    "hash": "sha256d"
+                }
+            ]
+        },
+        "shareMultiplier": 65536,
+        "explorerBlockLink": "https://explorer.lightningcash-reborn.space/block/$height$",
+        "explorerTxLink": "https://explorer.lightningcash-reborn.space/tx/{0}",
+        "explorerAccountLink": "https://explorer.lightningcash-reborn.space/address/{0}"
+    },
     "ravencash": {
         "name": "Ravencash",
         "symbol": "RVH",
