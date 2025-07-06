@@ -206,12 +206,12 @@ public class ProgpowJob : BitcoinJob
 
         this.extraNoncePlaceHolderLength = RavencoinConstants.ExtranoncePlaceHolderLength;
         this.shareMultiplier = shareMultiplier;
-        
+
         if(coin.HasMasterNodes)
         {
             masterNodeParameters = BlockTemplate.Extra.SafeExtensionDataAs<MasterNodeBlockTemplateExtra>();
 
-            if(coin.Symbol == "FIRO")
+            if(coin.Symbol == "FIRO" || coin.Symbol == "VORA")
             {
                 if(masterNodeParameters.Extra?.ContainsKey("znode") == true)
                 {
@@ -226,7 +226,7 @@ public class ProgpowJob : BitcoinJob
                 txVersion += txType << 16;
             }
         }
-        
+
         if(coin.HasPayee)
             payeeParameters = BlockTemplate.Extra.SafeExtensionDataAs<PayeeBlockTemplateExtra>();
 
@@ -249,7 +249,7 @@ public class ProgpowJob : BitcoinJob
         this.headerHasher = headerHasher;
         this.blockHasher = blockHasher;
         this.progpowHasher = progpowHasher;
-        
+
         if(!string.IsNullOrEmpty(BlockTemplate.Target))
             this.blockTargetValue = new uint256(BlockTemplate.Target);
         else

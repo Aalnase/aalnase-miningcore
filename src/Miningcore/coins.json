@@ -3050,6 +3050,38 @@
         "explorerTxLink": "https://explorer.phicoin.net/tx/{0}",
         "explorerAccountLink": "https://explorer.phicoin.net/address/{0}"
     },
+    "privora": {
+        "name": "Privora",
+        "symbol": "VORA",
+        "family": "progpow",
+        "progpower": "firopow",
+        "website": "https://privora.org/",
+        "github": "https://github.com/PrivoraCore/Privora",
+        "market": "",
+        "twitter": "",
+        "telegram": "https://t.me/PrivoraTM",
+        "discord": "https://discord.gg/4AM5SUVzgs",
+        "coinbaseHasher": {
+            "hash": "sha256d"
+        },
+        "headerHasher": {
+            "hash": "sha256d"
+        },
+        "blockHasher": {
+            "hash": "reverse",
+            "args": [
+                {
+                    "hash": "sha256d"
+                }
+            ]
+        },
+        "hasFounderFee": true,
+        "hasMasterNodes": true,
+        "shareMultiplier": 1,
+        "explorerBlockLink": "https://explorer.privora.org/block/$hash$",
+        "explorerTxLink": "https://explorer.privora.org/tx/{0}",
+        "explorerAccountLink": "https://explorer.privora.org/address/{0}"
+    },
     "telestai": {
         "name": "Telestai",
         "symbol": "TLS",
