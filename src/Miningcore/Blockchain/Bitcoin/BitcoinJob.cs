@@ -332,6 +332,9 @@ public class BitcoinJob
         if (coin.HasFounderFee)
             rewardToPool = CreateFounderOutputs(tx, rewardToPool);
 
+        if (coin.HasFundReward)
+            rewardToPool = CreateFundRewardOutputs(tx, rewardToPool);
+
         if(coin.HasFortuneReward)
             rewardToPool = CreateFortuneOutputs(tx, rewardToPool);
 
@@ -680,6 +683,41 @@ public class BitcoinJob
 
     #endregion // Founder
 
+    #region FundReward
+
+    protected FundRewardBlockTemplateExtra fundRewardParameters;
+
+    protected virtual Money CreateFundRewardOutputs(Transaction tx, Money reward)
+    {
+        if (fundRewardParameters.FundReward != null)
+        {
+            FundReward[] fundRewards;
+            if (fundRewardParameters.FundReward.Type == JTokenType.Array)
+                fundRewards = fundRewardParameters.FundReward.ToObject<FundReward[]>();
+            else
+                fundRewards = new[] { fundRewardParameters.FundReward.ToObject<FundReward>() };
+
+            if(fundRewards != null)
+            {
+                foreach(var FundReward in fundRewards)
+                {
+                    if(!string.IsNullOrEmpty(FundReward.Payee))
+                    {
+                        Script payeeAddress = new Script(FundReward.Script.HexToByteArray());
+                        var payeeReward = FundReward.Amount;
+
+                        tx.Outputs.Add(payeeReward, payeeAddress);
+                        reward -= payeeReward;
+                    }
+                }
+            }
+        }
+
+        return reward;
+    }
+
+    #endregion // FundReward
+
     #region Minerfund
 
     protected MinerFundTemplateExtra minerFundParameters;
@@ -968,13 +1006,16 @@ public class BitcoinJob
         if(coin.HasPayee)
             payeeParameters = BlockTemplate.Extra.SafeExtensionDataAs<PayeeBlockTemplateExtra>();
 
-        if (coin.HasFounderFee)
+        if(coin.HasFounderFee)
             founderParameters = BlockTemplate.Extra.SafeExtensionDataAs<FounderBlockTemplateExtra>();
+
+        if(coin.HasFundReward)
+            fundRewardParameters = BlockTemplate.Extra.SafeExtensionDataAs<FundRewardBlockTemplateExtra>();
 
         if(coin.HasFortuneReward)
             fortuneParameters = BlockTemplate.Extra.SafeExtensionDataAs<FortuneBlockTemplateExtra>();
 
-        if (coin.HasMinerFund)
+        if(coin.HasMinerFund)
             minerFundParameters = BlockTemplate.Extra.SafeExtensionDataAs<MinerFundTemplateExtra>("coinbasetxn", "minerfund");
 
         if(coin.HasCoinbaseDevReward)
