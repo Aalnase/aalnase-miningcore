@@ -114,7 +114,14 @@ public class XelisPayoutHandler : PayoutHandlerBase,
         {
             logger.Warn(() => $"[{LogCategory}] '{XelisWalletCommands.DaemonName}' is offline...");
 
-            var setOnlineMode = await rpcClientWallet.ExecuteAsync<object>(logger, XelisWalletCommands.SetOnlineMode, ct);
+            var daemonEndpoint = daemonEndpoints.First();
+            var daemonAddress = $"{(daemonEndpoint.Ssl ? "https" : "http")}://{daemonEndpoint.Host}:{daemonEndpoint.Port}";
+
+            var setOnlineMode = await rpcClientWallet.ExecuteAsync<object>(logger, XelisWalletCommands.SetOnlineMode, ct, new SetOnlineModeRequest
+            {
+                DaemonAddress = daemonAddress,
+                AutoReconnect = true
+            });
             if(setOnlineMode.Error != null)
                 throw new Exception($"'{XelisWalletCommands.SetOnlineMode}': {setOnlineMode.Error.Message} (Code {setOnlineMode.Error.Code})");
 
