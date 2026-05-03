@@ -1,5 +1,5 @@
-# Do NOT ignore .git
-# GitVersion.MsBuild needs the .git directory during dotnet publish.
+# Git metadata is intentionally included.
+# GitVersion.MsBuild needs .git during dotnet publish.
 
 # Local build outputs
 build/
@@ -16,7 +16,7 @@ obj/
 src/Native/libxelishashv3/build/
 external/xelis-hash/C/build/
 
-# Runtime configs and secrets
+# Local runtime configuration and secrets
 config.json
 *.wallet
 *.wallet.*
@@ -26,16 +26,24 @@ config.json
 .wallet_pass
 .wallet_rpc_pass
 .api_key
+*.env
+.env
 
-# Runtime files
+# Runtime data, local caches and temporary directories
+data/
+runtime/
+cache/
+tmp/
+temp/
+logs/
 *.log
 *.sql
 *.dump
-mbck/
-dag-zano/
-**/dag-zano/
 
-# Archives / temporary files
+# Local backups and archives
+backup/
+backups/
+*.backup/
+*.bak
 *.tar.gz
 *.zip
-*.bak
