@@ -10,6 +10,7 @@ RUN apt-get update && \
       git \
       build-essential \
       cmake \
+      ninja-build \
       ca-certificates \
       pkg-config \
       libssl-dev \
