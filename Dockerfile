@@ -17,6 +17,7 @@ RUN apt-get update && \
       libsodium-dev \
       libzmq3-dev \
       libboost-all-dev \
+      libgmp-dev \
     && rm -rf /var/lib/apt/lists/*
 
 COPY . .
