@@ -152,7 +152,7 @@ This keeps other coins compatible with normal Miningcore behavior.
 
 A neutral example pool configuration is available at:
 
-    examples/mflex_pool.json
+    examples/multiflex_pool.json
 
 This file contains placeholder values only. Replace wallet address, RPC user, RPC password, ports and payout settings with your own production values.
 
