@@ -150,6 +150,12 @@ This keeps other coins compatible with normal Miningcore behavior.
 
 ---
 
+A neutral example pool configuration is available at:
+
+    examples/mflex_pool.json
+
+This file contains placeholder values only. Replace wallet address, RPC user, RPC password, ports and payout settings with your own production values.
+
 ## MFLEX notes
 
 MFLEX support is intended for Multiflex nodes and pools that require MFLEX-specific block construction, coinbase handling or block submission behavior.
