@@ -288,3 +288,34 @@ Run with your local config:
 This is a custom Miningcore fork for selected coin integrations.
 
 Before using it in production, always test your daemon, wallet, pool configuration, native libraries, block submission and payout behavior in a controlled environment.
+
+---
+
+## Docker image
+
+A prebuilt Docker image is available from GitHub Container Registry:
+
+    ghcr.io/aalnase/aalnase-miningcore:main
+    ghcr.io/aalnase/aalnase-miningcore:v1.0.0-aalnase
+
+Pull the latest main image:
+
+    docker pull ghcr.io/aalnase/aalnase-miningcore:main
+
+Pull the fixed version tag:
+
+    docker pull ghcr.io/aalnase/aalnase-miningcore:v1.0.0-aalnase
+
+Example run with host networking and an external config directory:
+
+    docker run --rm -it \
+      --name aalnase-miningcore \
+      --network host \
+      -v /path/to/config:/config:ro \
+      ghcr.io/aalnase/aalnase-miningcore:v1.0.0-aalnase
+
+The container expects the Miningcore configuration at:
+
+    /config/config.json
+
+For production, keep config.json outside the repository and mount it into the container.
