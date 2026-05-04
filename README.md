@@ -207,46 +207,26 @@ The exact production configuration depends on your local ZANO daemon, wallet and
 
 Production configuration files are not included in this repository.
 
-Do not commit:
+Use your own local `config.json` on the server or mount it into the Docker container.
 
-- config.json
-- wallet files
-- RPC usernames
-- RPC passwords
-- API keys
-- database dumps
-- runtime logs
-- build output directories
-- temporary files
+Example local start:
 
-Use your own local config.json on the server.
-
-Example start command:
-
-    cd /path/to/miningcore
     ./build/Miningcore -c config.json
 
----
+Example Docker start:
 
-## Security checks before committing
+    docker run --rm -it \
+      --name aalnase-miningcore \
+      --network host \
+      -v /path/to/config:/config:ro \
+      ghcr.io/aalnase/aalnase-miningcore:v1.0.0-aalnase
 
-Before committing changes, check for secrets:
+The container expects the Miningcore configuration at:
 
-    git grep -n -i \
-      -e 'rpcpass' \
-      -e 'rpcuser' \
-      -e 'wallet_pass' \
-      -e 'api_key' \
-      -e 'password' \
-      || echo "No obvious secrets found"
-
-Check for accidentally tracked runtime files:
-
-    git ls-files | grep -Ei 'config\.json|wallet|wallet_pass|rpcpass|rpcuser|\.sql|\.dump|\.log' \
-      && echo "WARNING: sensitive/runtime file tracked" \
-      || echo "OK: no sensitive/runtime files tracked"
+    /config/config.json
 
 ---
+
 
 ## Branch policy
 
@@ -283,14 +263,6 @@ Run with your local config:
 
 ---
 
-## Disclaimer
-
-This is a custom Miningcore fork for selected coin integrations.
-
-Before using it in production, always test your daemon, wallet, pool configuration, native libraries, block submission and payout behavior in a controlled environment.
-
----
-
 ## Docker image
 
 A prebuilt Docker image is available from GitHub Container Registry:
@@ -319,3 +291,12 @@ The container expects the Miningcore configuration at:
     /config/config.json
 
 For production, keep config.json outside the repository and mount it into the container.
+
+---
+## Disclaimer
+
+This is a custom Miningcore fork for selected coin integrations.
+
+Before using it in production, always test your daemon, wallet, pool configuration, native libraries, block submission and payout behavior in a controlled environment.
+
+---
