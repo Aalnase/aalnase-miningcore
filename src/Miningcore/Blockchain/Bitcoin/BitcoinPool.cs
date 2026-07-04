@@ -534,24 +534,46 @@ private object CreateWorkerJob(StratumConnection connection, bool cleanJob)
         await connection.RespondAsync(response);
     }
 
-    private void ConfigureVersionRolling(StratumConnection connection, BitcoinWorkerContext context,
-        IReadOnlyDictionary<string, JToken> extensionParams, Dictionary<string, object> result)
+   private void ConfigureVersionRolling(StratumConnection connection, BitcoinWorkerContext context,
+    IReadOnlyDictionary<string, JToken> extensionParams, Dictionary<string, object> result)
+{
+    //var requestedBits = extensionParams[BitcoinStratumExtensions.VersionRollingBits].Value<uint>();
+    var requestedMask = BitcoinConstants.VersionRollingPoolMask;
+
+    if(extensionParams.TryGetValue(BitcoinStratumExtensions.VersionRollingMask, out var requestedMaskValue))
+        requestedMask = uint.Parse(requestedMaskValue.Value<string>(), NumberStyles.HexNumber);
+
+    // Compute effective mask
+    var finalMask = BitcoinConstants.VersionRollingPoolMask & requestedMask;
+
+    // DigiByte Core 9.26:
+    // bit 0  = algolock
+    // bit 23 = digidollar
+    //
+    // Only sanitize DGB pools. Other coins stay untouched.
+    var symbol = coin?.Symbol?.ToUpperInvariant();
+    var poolId = poolConfig?.Id?.ToUpperInvariant();
+
+    if(symbol == "DGB" || symbol == "DIGIBYTE" || symbol == "DGB-SHA256" || symbol == "DIGIBYTE-SHA256" ||
+       poolId == "DGB" || poolId == "DGB-SOLO" || poolId?.Contains("DGB") == true)
     {
-        //var requestedBits = extensionParams[BitcoinStratumExtensions.VersionRollingBits].Value<int>();
-        var requestedMask = BitcoinConstants.VersionRollingPoolMask;
+        const uint digibyteReservedVersionBits = (1u << 0) | (1u << 23);
+        var oldMask = finalMask;
 
-        if(extensionParams.TryGetValue(BitcoinStratumExtensions.VersionRollingMask, out var requestedMaskValue))
-            requestedMask = uint.Parse(requestedMaskValue.Value<string>(), NumberStyles.HexNumber);
+        finalMask &= ~digibyteReservedVersionBits;
 
-        // Compute effective mask
-        context.VersionRollingMask = BitcoinConstants.VersionRollingPoolMask & requestedMask;
-
-        // enabled
-        result[BitcoinStratumExtensions.VersionRolling] = true;
-        result[BitcoinStratumExtensions.VersionRollingMask] = context.VersionRollingMask.Value.ToStringHex8();
-
-        logger.Info(() => $"[{connection.ConnectionId}] Using version-rolling mask {result[BitcoinStratumExtensions.VersionRollingMask]}");
+        if(oldMask != finalMask)
+            logger.Info(() => $"[{connection.ConnectionId}] DGB version-rolling mask sanitized: old={oldMask.ToStringHex8()}, final={finalMask.ToStringHex8()}, pool={poolConfig?.Id}, coin={coin?.Symbol}");
     }
+
+    context.VersionRollingMask = finalMask;
+
+    // enabled
+    result[BitcoinStratumExtensions.VersionRolling] = true;
+    result[BitcoinStratumExtensions.VersionRollingMask] = context.VersionRollingMask.Value.ToStringHex8();
+
+    logger.Info(() => $"[{connection.ConnectionId}] Using version-rolling mask {result[BitcoinStratumExtensions.VersionRollingMask]}");
+}
 
     private void ConfigureMinimumDiff(StratumConnection connection, BitcoinWorkerContext context,
         IReadOnlyDictionary<string, JToken> extensionParams, Dictionary<string, object> result)
