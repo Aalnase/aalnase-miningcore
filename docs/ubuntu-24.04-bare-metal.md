@@ -14,6 +14,8 @@ This fork can run without Docker. The supported bare-metal target is Ubuntu 24.0
 - `multiflexd.service` and `miningcore.service`
 - a generated MFLEX pool config at `/etc/miningcore/config.json`
 
+The installer must be run with root privileges because it installs packages, writes `/etc` configs, installs binaries under `/opt`, and registers systemd units. The long-running services do **not** run as root: Miningcore runs as the `miningcore` system user and Multiflex Core runs as the `multiflex` system user.
+
 `coins.json` is intentionally left untouched. It remains a broad example catalog from which operators can copy the coin definitions they actually need.
 
 ## Public pool vs home pool
@@ -38,13 +40,16 @@ sudo POOL_MODE=public MFLEX_POOL_ADDRESS=M... ./contrib/install/install-ubuntu-2
 
 ## Important files
 
-- Miningcore binary: `/opt/miningcore/Miningcore`
-- Miningcore config: `/etc/miningcore/config.json`
-- Multiflex Core binary: `/opt/multiflexcoin/bin/bitcoind`
+- Miningcore binary: `/opt/miningcore/Miningcore` (`root:root`, read-only to the service)
+- Miningcore config: `/etc/miningcore/config.json` (`root:miningcore`, mode `640`)
+- Miningcore data/logs: `/var/lib/miningcore`, `/var/log/miningcore` (`miningcore:miningcore`)
+- Multiflex Core binary: `/opt/multiflexcoin/bin/bitcoind` (`root:root`, read-only to the service)
 - MFLEX alias: `/usr/local/bin/multiflexd`
-- Multiflex config: `/etc/multiflexcoin/multiflex.conf`
-- Multiflex data: `/var/lib/multiflexcoin`
+- Multiflex config: `/etc/multiflexcoin/multiflex.conf` (`root:multiflex`, mode `640`)
+- Multiflex data: `/var/lib/multiflexcoin` (`multiflex:multiflex`)
 - Logs: `journalctl -u miningcore -f` and `journalctl -u multiflexd -f`
+
+This layout keeps `/opt` binaries and `/etc` configs protected from the service users. Runtime write access is limited through systemd to the specific `/var/lib/...` and `/var/log/...` paths the daemons need.
 
 ## After install
 

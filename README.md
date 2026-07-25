@@ -223,6 +223,8 @@ The installer provides two profiles:
 - `public`: public internet pool defaults, payment processing enabled.
 - `home`: home/LAN pool defaults, API localhost-only, payment processing disabled by default.
 
+The installer runs as root for package/system setup, but the daemons do not run as root. Miningcore runs as the `miningcore` system user, Multiflex Core runs as the `multiflex` system user, `/opt` binaries stay root-owned, and service write access is limited to `/var/lib/...` and `/var/log/...`.
+
 The installer also builds and installs Multiflex Core from:
 
     https://github.com/Aalnase/multiflexcoin

@@ -71,7 +71,7 @@ ask_pool_mode() {
 
 install_base_packages() {
   apt-get update
-  apt-get install -y --no-install-recommends ca-certificates curl gnupg lsb-release git sudo jq
+  apt-get install -y --no-install-recommends ca-certificates curl gnupg lsb-release git sudo jq file
 
   if ! apt-cache show dotnet-sdk-10.0 >/dev/null 2>&1; then
     local ms_deb="/tmp/packages-microsoft-prod.deb"
@@ -106,6 +106,21 @@ install_postgresql18() {
 setup_users() {
   id -u miningcore >/dev/null 2>&1 || useradd --system --home /opt/miningcore --shell /usr/sbin/nologin miningcore
   id -u multiflex >/dev/null 2>&1 || useradd --system --home /var/lib/multiflexcoin --shell /usr/sbin/nologin multiflex
+}
+
+harden_tree_readonly() {
+  local path="$1"
+  chown -R root:root "$path"
+  find "$path" -type d -exec chmod 755 {} \;
+  find "$path" -type f -exec chmod 644 {} \;
+  # Restore executable bits for published native binaries/scripts. Shared
+  # libraries do not need to be executable, but keeping executable ELF/program
+  # files executable avoids breaking dotnet apphost and coin daemon CLIs.
+  while IFS= read -r -d '' file; do
+    if file "$file" | grep -Eq 'ELF .* executable|ELF .* pie executable|POSIX shell script|Bourne-Again shell script'; then
+      chmod 755 "$file"
+    fi
+  done < <(find "$path" -type f -print0)
 }
 
 setup_postgres_schema() {
@@ -145,13 +160,17 @@ SQL
 }
 
 build_install_miningcore() {
-  install -d -o miningcore -g miningcore /opt/miningcore /etc/miningcore /var/log/miningcore
+  install -d -o root -g root -m 0755 /opt/miningcore
+  install -d -o root -g miningcore -m 0750 /etc/miningcore
+  install -d -o miningcore -g miningcore -m 0750 /var/lib/miningcore /var/log/miningcore
 
   echo "Publishing Miningcore (.NET 10). This also builds native hashing libraries..."
   (cd "$REPO_ROOT" && BUILD_JOBS="${BUILD_JOBS:-$(nproc)}" dotnet publish src/Miningcore/Miningcore.csproj \
     -c Release --framework net10.0 -o /opt/miningcore)
 
-  chown -R miningcore:miningcore /opt/miningcore /var/log/miningcore
+  harden_tree_readonly /opt/miningcore
+  chown -R miningcore:miningcore /var/lib/miningcore /var/log/miningcore
+  chmod 750 /var/lib/miningcore /var/log/miningcore
 }
 
 build_install_multiflexcoin() {
@@ -159,8 +178,9 @@ build_install_multiflexcoin() {
   local repo_url="${MFLEX_REPO_URL:-https://github.com/Aalnase/multiflexcoin.git}"
   local branch="${MFLEX_BRANCH:-main}"
 
-  install -d /usr/local/src /opt/multiflexcoin /etc/multiflexcoin /var/lib/multiflexcoin
-  chown -R multiflex:multiflex /var/lib/multiflexcoin
+  install -d -o root -g root -m 0755 /usr/local/src /opt/multiflexcoin
+  install -d -o root -g multiflex -m 0750 /etc/multiflexcoin
+  install -d -o multiflex -g multiflex -m 0750 /var/lib/multiflexcoin
 
   if [[ ! -d "$src_dir/.git" ]]; then
     git clone --depth 1 --branch "$branch" "$repo_url" "$src_dir"
@@ -186,6 +206,10 @@ build_install_multiflexcoin() {
   # build and may not exist.
   cmake --install "$src_dir/build" --prefix /opt/multiflexcoin --strip --component bitcoind
   cmake --install "$src_dir/build" --prefix /opt/multiflexcoin --strip --component bitcoin-cli
+
+  harden_tree_readonly /opt/multiflexcoin
+  chown -R multiflex:multiflex /var/lib/multiflexcoin
+  chmod 750 /var/lib/multiflexcoin
 
   # Provide convenient stable command names.
   ln -sf /opt/multiflexcoin/bin/multiflexd /usr/local/bin/multiflexd
