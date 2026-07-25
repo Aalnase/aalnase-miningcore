@@ -313,8 +313,8 @@ build_install_multiflexcoin() {
     git -C "$src_dir" reset --hard "origin/$branch"
   fi
 
-  echo "Building Multiflex Core from source with BUILD_JOBS=${jobs}. This can take a while..."
-  (cd "$src_dir" && make -C depends -j"$jobs")
+  echo "Building Multiflex Core from source with BUILD_JOBS=${jobs} and headless depends (NO_QT=1 NO_USDT=1). This can take a while..."
+  (cd "$src_dir" && make -C depends -j"$jobs" NO_QT=1 NO_USDT=1)
   local toolchain
   toolchain="$(find "$src_dir/depends" -path '*/toolchain.cmake' | head -n1)"
   if [[ -z "$toolchain" ]]; then
