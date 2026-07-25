@@ -221,7 +221,10 @@ SQL
   # Load schema only if it is not present yet. createdb.sql starts with SET ROLE miningcore;
   # so keep the default role/database names unless the operator explicitly customizes later.
   if ! sudo -u postgres psql -d "$db_name" -tAc "SELECT to_regclass('public.shares')" | grep -q shares; then
-    sudo -u postgres psql -d "$db_name" -v ON_ERROR_STOP=1 -f "$REPO_ROOT/src/Miningcore/Persistence/Postgres/Scripts/createdb.sql"
+    # The repository may live under /root, which the postgres system user cannot
+    # traverse. Read the schema as root and pipe it into psql running as postgres
+    # instead of asking postgres to open the file path directly.
+    sudo -u postgres psql -d "$db_name" -v ON_ERROR_STOP=1 < "$REPO_ROOT/src/Miningcore/Persistence/Postgres/Scripts/createdb.sql"
   fi
 
   sudo -u postgres psql -d "$db_name" -v ON_ERROR_STOP=1 <<SQL
