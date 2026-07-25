@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Simple Multiflex Miningcore pool dashboard">
+  <title>MFLEX Mining Pool</title>
+  <link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+  <header class="hero">
+    <nav class="topbar" aria-label="Primary">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">◆</span>
+        <span>MFLEX Pool</span>
+      </div>
+      <div class="status-pill" id="api-status">Checking API…</div>
+    </nav>
+    <section class="hero-copy">
+      <p class="eyebrow">Miningcore + Multiflex</p>
+      <h1>Simple MFLEX mining pool dashboard</h1>
+      <p class="lede">A lightweight, dependency-free WebUI for the Ubuntu 24 MFLEX Miningcore installer.</p>
+      <div class="hero-actions">
+        <a class="button primary" id="stratum-link" href="#connect">Start mining</a>
+        <a class="button ghost" href="/api/pools" target="_blank" rel="noopener">Pool API</a>
+      </div>
+    </section>
+  </header>
+
+  <main>
+    <section class="grid stats" aria-label="Pool statistics">
+      <article class="card"><span class="label">Pool</span><strong id="pool-id">—</strong></article>
+      <article class="card"><span class="label">Network</span><strong id="network">—</strong></article>
+      <article class="card"><span class="label">Pool hashrate</span><strong id="pool-hashrate">—</strong></article>
+      <article class="card"><span class="label">Miners</span><strong id="miners">—</strong></article>
+      <article class="card"><span class="label">Workers</span><strong id="workers">—</strong></article>
+      <article class="card"><span class="label">Network difficulty</span><strong id="difficulty">—</strong></article>
+    </section>
+
+    <section class="panel" id="connect">
+      <div>
+        <p class="eyebrow">Connection</p>
+        <h2>Mine Multiflex</h2>
+        <p>Use a Multiflex wallet address as your username. Password can usually be <code>x</code>.</p>
+      </div>
+      <div class="connect-box">
+        <label for="stratum">Stratum endpoint</label>
+        <div class="copy-row">
+          <input id="stratum" readonly value="stratum+tcp://localhost:3333">
+          <button id="copy-stratum" type="button">Copy</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid two">
+      <article class="panel">
+        <p class="eyebrow">Recent pool data</p>
+        <h2>Blocks & payments</h2>
+        <dl class="facts">
+          <div><dt>Blocks found</dt><dd id="blocks-found">—</dd></div>
+          <div><dt>Last block</dt><dd id="last-block">—</dd></div>
+          <div><dt>Payment threshold</dt><dd id="payment-threshold">—</dd></div>
+          <div><dt>Minimum payout</dt><dd id="min-payout">—</dd></div>
+        </dl>
+      </article>
+      <article class="panel">
+        <p class="eyebrow">Miner lookup</p>
+        <h2>Check wallet stats</h2>
+        <p>Enter a wallet address to open the Miningcore miner API response.</p>
+        <form id="miner-form" class="lookup">
+          <input id="miner-address" autocomplete="off" placeholder="MFLEX wallet address">
+          <button type="submit">Open</button>
+        </form>
+      </article>
+    </section>
+  </main>
+
+  <footer>
+    <span>Vanilla MFLEX WebUI for Miningcore.</span>
+    <span>No external frontend dependencies.</span>
+  </footer>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>

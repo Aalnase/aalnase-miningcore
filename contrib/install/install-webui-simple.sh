@@ -1,13 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
-DOMAIN="eu.go-poolmining.com"
-WEBROOT="/var/www/miningcore-webui"
+DOMAIN="${DOMAIN:-$(hostname -f 2>/dev/null || hostname)}"
+WEBROOT="${WEBROOT:-/var/www/miningcore-webui}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+SOURCE_DIR="${REPO_ROOT}/contrib/webui-simple"
 BACKUP_DIR="/root/backups/pre-webui-${DOMAIN}-$(date +%Y%m%d-%H%M%S)"
 log(){ printf "\n==> %s\n" "$*"; }
 
+if [[ ! -d "$SOURCE_DIR" ]]; then
+  echo "WebUI source directory not found: $SOURCE_DIR" >&2
+  exit 1
+fi
+
 log "Creating backup at ${BACKUP_DIR}"
 sudo mkdir -p "$BACKUP_DIR"
-for p in /etc/nginx /etc/letsencrypt /etc/ufw /etc/fail2ban /etc/sysctl.d/99-aalnase-pool-hardening.conf /etc/miningcore/config.json /var/www; do
+for p in /etc/nginx /etc/letsencrypt /etc/ufw /etc/fail2ban /etc/sysctl.d/99-aalnase-pool-hardening.conf /etc/miningcore/config.json "$WEBROOT"; do
   if sudo test -e "$p"; then
     sudo tar --warning=no-file-changed -C / -czf "$BACKUP_DIR/$(echo "$p" | sed "s#^/##;s#/#_#g").tar.gz" "${p#/}" || true
   fi
@@ -25,49 +33,14 @@ log "Backup ready: ${BACKUP_DIR}"
 
 log "Installing packages"
 sudo apt-get update
-sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nginx git curl certbot python3-certbot-nginx ca-certificates
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nginx curl certbot python3-certbot-nginx ca-certificates rsync
 
-log "Installing/updating Retro-Mike WebUI"
-sudo rm -rf "${WEBROOT}.new"
-sudo git clone --depth 1 https://github.com/TheRetroMike/Miningcore.WebUI.git "${WEBROOT}.new"
-if sudo test -d "$WEBROOT"; then
-  sudo mv "$WEBROOT" "${WEBROOT}.bak.$(date +%Y%m%d-%H%M%S)"
-fi
-sudo mv "${WEBROOT}.new" "$WEBROOT"
+log "Installing simple MFLEX WebUI"
+sudo mkdir -p "$WEBROOT"
+sudo rsync -a --delete "$SOURCE_DIR/" "$WEBROOT/"
 sudo chown -R www-data:www-data "$WEBROOT"
 sudo find "$WEBROOT" -type d -exec chmod 755 {} \;
 sudo find "$WEBROOT" -type f -exec chmod 644 {} \;
-
-log "Inspecting WebUI config files"
-sudo find "$WEBROOT" -maxdepth 3 -type f \( -name "*.js" -o -name "*.html" -o -name "*.json" \) | sudo tee "$BACKUP_DIR/webui-files.txt" >/dev/null
-sudo grep -RIn "var WebURL\|var API\|stratumAddress\|API_BASE_URL\|localhost\|4000\|miningcore" "$WEBROOT" | sudo tee "$BACKUP_DIR/webui-config-matches-before.txt" >/dev/null || true
-
-log "Configuring WebUI domain/API/stratum strings when present"
-# Older Retro-Mike WebUI uses js/miningcore.js globals. Patch if found.
-if sudo test -f "$WEBROOT/js/miningcore.js"; then
-  sudo python3 - <<PY
-from pathlib import Path
-p=Path("$WEBROOT/js/miningcore.js")
-s=p.read_text()
-repls={
-    "var WebURL = window.location.protocol + \"//\" + window.location.hostname + \"/\";": "var WebURL = \"https://$DOMAIN/\";",
-    "var API = WebURL + \"api/\";": "var API = \"https://$DOMAIN/api/\";",
-    "var stratumAddress = \"stratum+tcp://\" + window.location.hostname + \":\";": "var stratumAddress = \"stratum+tcp://$DOMAIN:\";",
-}
-for old,new in repls.items():
-    s=s.replace(old,new)
-p.write_text(s)
-PY
-fi
-# Generic fallback replacements for common hard-coded examples.
-sudo grep -RIl "umbrel.local\|retro-mike-miningcore_server_1\|localhost:4000\|127.0.0.1:4000" "$WEBROOT" | while read -r f; do
-  sudo sed -i \
-    -e "s#http://retro-mike-miningcore_server_1:4000/api#https://${DOMAIN}/api#g" \
-    -e "s#http://localhost:4000/api#https://${DOMAIN}/api#g" \
-    -e "s#http://127.0.0.1:4000/api#https://${DOMAIN}/api#g" \
-    -e "s#umbrel.local#${DOMAIN}#g" "$f"
-done
-sudo chown -R www-data:www-data "$WEBROOT"
 
 log "Configuring Nginx"
 sudo tee /etc/nginx/sites-available/miningcore-webui >/dev/null <<NGINX
@@ -118,13 +91,19 @@ log "Checking HTTP before certbot"
 curl -I --max-time 15 "http://${DOMAIN}/" || true
 curl -fsS --max-time 15 "http://${DOMAIN}/api/pools" | head -c 1000 || true; echo
 
-log "Issuing HTTPS certificate"
-sudo certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --register-unsafely-without-email --redirect
-sudo nginx -t
-sudo systemctl reload nginx
+log "Issuing HTTPS certificate when DOMAIN resolves here"
+PUBLIC_IP="$(curl -fsS --max-time 10 https://api.ipify.org || true)"
+DOMAIN_IPS="$(getent ahostsv4 "$DOMAIN" | awk '{print $1}' | sort -u | tr '\n' ' ' || true)"
+if [[ -n "$PUBLIC_IP" && " $DOMAIN_IPS " == *" $PUBLIC_IP "* ]]; then
+  sudo certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --register-unsafely-without-email --redirect
+  sudo nginx -t
+  sudo systemctl reload nginx
+else
+  echo "Skipping certbot: ${DOMAIN} does not resolve to this server (${PUBLIC_IP}); DNS has ${DOMAIN_IPS:-none}" >&2
+fi
 
 log "Final verification"
-curl -I --max-time 20 "https://${DOMAIN}/"
+curl -I --max-time 20 "http://${DOMAIN}/" || true
 echo
-curl -fsS --max-time 20 "https://${DOMAIN}/api/pools" | python3 -m json.tool | head -120
+curl -fsS --max-time 20 "http://${DOMAIN}/api/pools" | python3 -m json.tool | head -120 || true
 printf "\nBACKUP_DIR=%s\n" "$BACKUP_DIR"
