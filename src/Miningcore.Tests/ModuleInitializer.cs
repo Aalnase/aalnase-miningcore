@@ -36,7 +36,7 @@ public static class ModuleInitializer
             builder.RegisterAssemblyModules(typeof(AutofacModule).GetTypeInfo().Assembly);
 
             // AutoMapper
-            var amConf = new MapperConfiguration(cfg => { cfg.AddProfile(new AutoMapperProfile()); });
+            var amConf = new MapperConfiguration(cfg => { cfg.AddProfile(new AutoMapperProfile()); }, Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance);
 
             builder.Register((ctx, parms) => amConf.CreateMapper());
 

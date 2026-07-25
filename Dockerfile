@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
-# Build stage: Ubuntu 22.04 / Jammy with .NET SDK
-FROM mcr.microsoft.com/dotnet/sdk:6.0-jammy AS build
+# Build stage: Ubuntu 24.04 / Noble with .NET SDK
+FROM mcr.microsoft.com/dotnet/sdk:10.0-noble AS build
 
 WORKDIR /src
 
@@ -29,8 +29,8 @@ RUN dotnet publish src/Miningcore/Miningcore.csproj \
     -p:UseAppHost=true \
     -o /app/build
 
-# Runtime stage: Ubuntu 22.04 / Jammy with ASP.NET runtime
-FROM mcr.microsoft.com/dotnet/aspnet:6.0-jammy AS runtime
+# Runtime stage: Ubuntu 24.04 / Noble with ASP.NET runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble AS runtime
 
 WORKDIR /app
 

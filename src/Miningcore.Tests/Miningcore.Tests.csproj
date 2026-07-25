@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <Platforms>AnyCPU</Platforms>
     <AssemblyName>Miningcore.Tests</AssemblyName>
@@ -38,7 +38,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.1" />
     <PackageReference Include="Microsoft.Reactive.Testing" Version="5.0.0" />
     <PackageReference Include="NLog" Version="5.4.0" />
-    <PackageReference Include="Npgsql" Version="9.0.3" />
+    <PackageReference Include="Npgsql" Version="10.0.3" />
     <PackageReference Include="NSubstitute" Version="4.4.0" />
     <PackageReference Include="xunit" Version="2.4.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
@@ -48,7 +48,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Miningcore\Miningcore.csproj" />
+    <ProjectReference Include="..\Miningcore\Miningcore.csproj" AdditionalProperties="SkipNativeBuild=true" />
   </ItemGroup>
 
   <ItemGroup>
@@ -63,7 +63,7 @@
   <!-- Copy library binaries from Miningcore build output on Windows  -->
   <Target Name="CopyLibsWin" AfterTargets="AfterBuild" Condition="'$(IsWindows)' == 'true'">
     <ItemGroup>
-      <Libs Include="$(ProjectDir)..\Miningcore\bin\$(Configuration)\net6.0\lib*.dll" />
+      <Libs Include="$(ProjectDir)..\Miningcore\bin\$(Configuration)\net10.0\lib*.dll" />
     </ItemGroup>
 
     <Copy SourceFiles="@(Libs)" DestinationFolder="$(OutDir)" />
@@ -72,7 +72,7 @@
   <!-- Copy library binaries from Miningcore build output on Linux  -->
   <Target Name="CopyLibsLinux" AfterTargets="AfterBuild" Condition="'$(IsLinux)' == 'true'">
     <ItemGroup>
-      <Libs Include="$(ProjectDir)..\Miningcore\bin\$(Configuration)\net6.0\lib*.so" />
+      <Libs Include="$(ProjectDir)..\Miningcore\bin\$(Configuration)\net10.0\lib*.so" />
     </ItemGroup>
 
     <Copy SourceFiles="@(Libs)" DestinationFolder="$(OutDir)" />

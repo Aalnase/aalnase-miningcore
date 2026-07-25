@@ -354,7 +354,7 @@ public class Program : BackgroundService
         builder.RegisterInstance(gcStats);
 
         // AutoMapper
-        var amConf = new MapperConfiguration(cfg => { cfg.AddProfile(new AutoMapperProfile()); });
+        var amConf = new MapperConfiguration(cfg => { cfg.AddProfile(new AutoMapperProfile()); }, Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance);
         builder.Register((ctx, parms) => amConf.CreateMapper());
 
         ConfigurePersistence(builder);
@@ -780,6 +780,7 @@ public class Program : BackgroundService
 
     private static async Task PreFlightChecks(IServiceProvider services)
     {
+        await VerifyPostgresServerVersion(services);
         await ConfigurePostgresCompatibilityOptions(services);
 
         ZcashNetworks.Instance.EnsureRegistered();
@@ -848,6 +849,15 @@ public class Program : BackgroundService
 
         // Configure ProgpowZ
         Miningcore.Crypto.Hashing.Progpow.ProgpowZ.Cache.messageBus = messageBus;
+    }
+
+    private static async Task VerifyPostgresServerVersion(IServiceProvider services)
+    {
+        if(clusterConfig.Persistence?.Postgres == null)
+            return;
+
+        var cf = services.GetService<IConnectionFactory>();
+        await PostgresVersion.EnsureSupportedServerVersionAsync(cf);
     }
 
     private static async Task ConfigurePostgresCompatibilityOptions(IServiceProvider services)

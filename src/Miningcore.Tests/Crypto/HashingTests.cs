@@ -129,49 +129,10 @@ public class HashingTests : TestBase
         Assert.Equal("75d08b4c639645f3f1e15c7c412160867821441d365a7bbe3edf2c6b852ccb59", result);
     }
 
-    [Fact]
-    public void Lyra2Rev2_Hash()
-    {
-        // for some unknown reason this tests fails only in Github actions
-        if(IsGithubActionRunner)
-            return;
-
-        var hasher = new Lyra2Rev2();
-        var hash = new byte[32];
-        hasher.Digest(Enumerable.Repeat((byte) 5, 80).ToArray(), hash);
-        var result = hash.ToHexString();
-
-        Assert.Equal("5cb1eea767131ab0ea446121854dffbfec1bf1f55938e9f877f9bae735a1c481", result);
-    }
-
-    [Fact]
-    public void Lyra2Rev2_Hash_Should_Throw_On_Short_Input()
-    {
-        var hasher = new Lyra2Rev2();
-        Assert.Throws<ArgumentException>(() => hasher.Digest(new byte[20], null));
-    }
-
-    [Fact]
-    public void Lyra2Rev3_Hash()
-    {
-        // for some unknown reason this tests fails only in Github actions
-        if(IsGithubActionRunner)
-            return;
-
-        var hasher = new Lyra2Rev3();
-        var hash = new byte[32];
-        hasher.Digest(Enumerable.Repeat((byte) 5, 80).ToArray(), hash);
-        var result = hash.ToHexString();
-
-        Assert.Equal("c56ec425ada2c8ddcb8d5a79a3a0c9d79f66318193049fb81f875c537a4f963d", result);
-    }
-
-    [Fact]
-    public void Lyra2Rev3_Hash_Should_Throw_On_Short_Input()
-    {
-        var hasher = new Lyra2Rev3();
-        Assert.Throws<ArgumentException>(() => hasher.Digest(new byte[20], null));
-    }
+    // Lyra2REv2/Lyra2REv3 are intentionally unsupported in this fork.
+    // coins.json still keeps legacy example entries, but operators should not
+    // enable Monacoin or Verge-Lyra pools unless Lyra2 is explicitly restored
+    // and re-verified against canonical network vectors.
 
     [Fact]
     public void Sha256D_Hash()

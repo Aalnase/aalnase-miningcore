@@ -203,13 +203,35 @@ The exact production configuration depends on your local ZANO daemon, wallet and
 
 ---
 
-## Configuration
+## Configuration and installation
 
 Production configuration files are not included in this repository.
 
-Use your own local `config.json` on the server or mount it into the Docker container.
+Use your own local `config.json`, or use the Ubuntu 24.04+ bare-metal installer. Docker is optional; Miningcore can run directly under systemd.
 
-Example local start:
+Bare-metal installer:
+
+    sudo ./contrib/install/install-ubuntu-24.04.sh
+
+Non-interactive examples:
+
+    sudo POOL_MODE=home ./contrib/install/install-ubuntu-24.04.sh
+    sudo POOL_MODE=public MFLEX_POOL_ADDRESS=M... ./contrib/install/install-ubuntu-24.04.sh
+
+The installer provides two profiles:
+
+- `public`: public internet pool defaults, payment processing enabled.
+- `home`: home/LAN pool defaults, API localhost-only, payment processing disabled by default.
+
+The installer also builds and installs Multiflex Core from:
+
+    https://github.com/Aalnase/multiflexcoin
+
+See the full guide:
+
+    docs/ubuntu-24.04-bare-metal.md
+
+Example local start after a manual build:
 
     ./build/Miningcore -c config.json
 
@@ -293,6 +315,12 @@ The container expects the Miningcore configuration at:
 For production, keep config.json outside the repository and mount it into the container.
 
 ---
+## Legacy Lyra2 algorithms
+
+`Lyra2REv2` and `Lyra2REv3` are intentionally unsupported in this fork. The old example entries in `coins.json` remain untouched because that file is used as a broad reference/template, but operators should not enable Monacoin or Verge-Lyra pools unless Lyra2 support is explicitly restored and verified against canonical network vectors.
+
+---
+
 ## Disclaimer
 
 This is a custom Miningcore fork for selected coin integrations.

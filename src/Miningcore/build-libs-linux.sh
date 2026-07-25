@@ -27,27 +27,29 @@ HAVE_AVX512F=$(../Native/check_cpu.sh avx512f && echo -DHAVE_AVX512F || echo)
 
 export HAVE_FEATURE="$HAVE_AES $HAVE_SSE2 $HAVE_SSE3 $HAVE_SSSE3 $HAVE_PCLMUL $HAVE_AVX $HAVE_AVX2 $HAVE_AVX512F"
 
-(cd ../Native/libmultihash && make clean && make) && mv ../Native/libmultihash/libmultihash.so "$OutDir"
-(cd ../Native/libbeamhash && make clean && make) && mv ../Native/libbeamhash/libbeamhash.so "$OutDir"
-(cd ../Native/libetchash && make clean && make) && mv ../Native/libetchash/libetchash.so "$OutDir"
-(cd ../Native/libethhash && make clean && make) && mv ../Native/libethhash/libethhash.so "$OutDir"
-(cd ../Native/libethhashb3 && make -j clean && make -j) && mv ../Native/libethhashb3/libethhashb3.so "$OutDir"
-(cd ../Native/libubqhash && make clean && make) && mv ../Native/libubqhash/libubqhash.so "$OutDir"
-(cd ../Native/libcryptonote && make clean && make) && mv ../Native/libcryptonote/libcryptonote.so "$OutDir"
-(cd ../Native/libcryptonight && make clean && make) && mv ../Native/libcryptonight/libcryptonight.so "$OutDir"
-(cd ../Native/libverushash && make clean && make) && mv ../Native/libverushash/libverushash.so "$OutDir"
-(cd ../Native/libfiropow && make clean && make) && mv ../Native/libfiropow/libfiropow.so "$OutDir"
-(cd ../Native/libkawpow && make clean && make) && mv ../Native/libkawpow/libkawpow.so "$OutDir"
-(cd ../Native/libmeowpow && make clean && make) && mv ../Native/libmeowpow/libmeowpow.so "$OutDir"
-(cd ../Native/libdero && make clean && make) && mv ../Native/libdero/libdero.so "$OutDir"
-(cd ../Native/libcortexcuckoocycle && make clean && make) && mv ../Native/libcortexcuckoocycle/libcortexcuckoocycle.so "$OutDir"
-(cd ../Native/libprogpowz && make clean && make) && mv ../Native/libprogpowz/libprogpowz.so "$OutDir"
-(cd ../Native/libzanonote && make clean && make) && mv ../Native/libzanonote/libzanonote.so "$OutDir"
-(cd ../Native/libmeraki && make clean && make) && mv ../Native/libmeraki/libmeraki.so "$OutDir"
-(cd ../Native/libphihash && make clean && make) && mv ../Native/libphihash/libphihash.so "$OutDir"
-(cd ../Native/libsccpow && make clean && make) && mv ../Native/libsccpow/libsccpow.so "$OutDir"
+BUILD_JOBS=${BUILD_JOBS:-$(nproc)}
 
-((cd /tmp && rm -rf secp256k1 && git clone https://github.com/bitcoin-ABC/secp256k1 && cd secp256k1 && git checkout 04fabb44590c10a19e35f044d11eb5058aac65b2 && mkdir build && cd build && cmake -GNinja .. -DCMAKE_C_FLAGS=-fPIC -DSECP256K1_ENABLE_MODULE_RECOVERY=OFF -DSECP256K1_ENABLE_COVERAGE=OFF -DSECP256K1_ENABLE_MODULE_SCHNORR=ON && ninja) && (cd ../Native/libnexapow && cp /tmp/secp256k1/build/libsecp256k1.a . && make clean && make) && mv ../Native/libnexapow/libnexapow.so "$OutDir")
-((cd /tmp && rm -rf RandomX && git clone https://github.com/tevador/RandomX && cd RandomX && git checkout tags/v1.2.1 && mkdir build && cd build && cmake -DARCH=native -DCMAKE_C_FLAGS=-Wa,--noexecstack -DCMAKE_CXX_FLAGS=-Wa,--noexecstack .. && make) && (cd ../Native/librandomx && cp /tmp/RandomX/build/librandomx.a . && make clean && make) && mv ../Native/librandomx/librandomx.so "$OutDir")
-((cd /tmp && rm -rf RandomARQ && git clone https://github.com/arqma/RandomARQ && cd RandomARQ && git checkout 3bcb6bafe63d70f8e6f78a0d431e71be2b638083 && mkdir build && cd build && cmake -DARCH=native -DCMAKE_C_FLAGS=-Wa,--noexecstack -DCMAKE_CXX_FLAGS=-Wa,--noexecstack .. && make) && (cd ../Native/librandomarq && cp /tmp/RandomARQ/build/librandomx.a . && make clean && make) && mv ../Native/librandomarq/librandomarq.so "$OutDir")
-((cd /tmp && rm -rf Panthera && git clone https://github.com/scala-network/Panthera && cd Panthera && mkdir build && cd build && cmake -DARCH=native .. && make) && (cd ../Native/libpanthera && cp /tmp/Panthera/build/librandomx.a . && make clean && make) && mv ../Native/libpanthera/libpanthera.so "$OutDir")
+(cd ../Native/libmultihash && make clean && make -j"$BUILD_JOBS") && mv ../Native/libmultihash/libmultihash.so "$OutDir"
+(cd ../Native/libbeamhash && make clean && make -j"$BUILD_JOBS") && mv ../Native/libbeamhash/libbeamhash.so "$OutDir"
+(cd ../Native/libetchash && make clean && make -j"$BUILD_JOBS") && mv ../Native/libetchash/libetchash.so "$OutDir"
+(cd ../Native/libethhash && make clean && make -j"$BUILD_JOBS") && mv ../Native/libethhash/libethhash.so "$OutDir"
+(cd ../Native/libethhashb3 && make clean && make -j"$BUILD_JOBS") && mv ../Native/libethhashb3/libethhashb3.so "$OutDir"
+(cd ../Native/libubqhash && make clean && make -j"$BUILD_JOBS") && mv ../Native/libubqhash/libubqhash.so "$OutDir"
+(cd ../Native/libcryptonote && make clean && make -j"$BUILD_JOBS") && mv ../Native/libcryptonote/libcryptonote.so "$OutDir"
+(cd ../Native/libcryptonight && make clean && make -j"$BUILD_JOBS") && mv ../Native/libcryptonight/libcryptonight.so "$OutDir"
+(cd ../Native/libverushash && make clean && make -j"$BUILD_JOBS") && mv ../Native/libverushash/libverushash.so "$OutDir"
+(cd ../Native/libfiropow && make clean && make -j"$BUILD_JOBS") && mv ../Native/libfiropow/libfiropow.so "$OutDir"
+(cd ../Native/libkawpow && make clean && make -j"$BUILD_JOBS") && mv ../Native/libkawpow/libkawpow.so "$OutDir"
+(cd ../Native/libmeowpow && make clean && make -j"$BUILD_JOBS") && mv ../Native/libmeowpow/libmeowpow.so "$OutDir"
+(cd ../Native/libdero && make clean && make -j"$BUILD_JOBS") && mv ../Native/libdero/libdero.so "$OutDir"
+(cd ../Native/libcortexcuckoocycle && make clean && make -j"$BUILD_JOBS") && mv ../Native/libcortexcuckoocycle/libcortexcuckoocycle.so "$OutDir"
+(cd ../Native/libprogpowz && make clean && make -j"$BUILD_JOBS") && mv ../Native/libprogpowz/libprogpowz.so "$OutDir"
+(cd ../Native/libzanonote && make clean && make -j"$BUILD_JOBS") && mv ../Native/libzanonote/libzanonote.so "$OutDir"
+(cd ../Native/libmeraki && make clean && make -j"$BUILD_JOBS") && mv ../Native/libmeraki/libmeraki.so "$OutDir"
+(cd ../Native/libphihash && make clean && make -j"$BUILD_JOBS") && mv ../Native/libphihash/libphihash.so "$OutDir"
+(cd ../Native/libsccpow && make clean && make -j"$BUILD_JOBS") && mv ../Native/libsccpow/libsccpow.so "$OutDir"
+
+((cd /tmp && rm -rf secp256k1 && git clone https://github.com/bitcoin-ABC/secp256k1 && cd secp256k1 && git checkout 04fabb44590c10a19e35f044d11eb5058aac65b2 && mkdir build && cd build && cmake -GNinja .. -DCMAKE_C_FLAGS=-fPIC -DSECP256K1_ENABLE_MODULE_RECOVERY=OFF -DSECP256K1_ENABLE_COVERAGE=OFF -DSECP256K1_ENABLE_MODULE_SCHNORR=ON && ninja) && (cd ../Native/libnexapow && cp /tmp/secp256k1/build/libsecp256k1.a . && make clean && make -j"$BUILD_JOBS") && mv ../Native/libnexapow/libnexapow.so "$OutDir")
+((cd /tmp && rm -rf RandomX && git clone https://github.com/tevador/RandomX && cd RandomX && git checkout tags/v1.2.1 && mkdir build && cd build && cmake -DARCH=native -DCMAKE_C_FLAGS=-Wa,--noexecstack -DCMAKE_CXX_FLAGS=-Wa,--noexecstack .. && make -j"$BUILD_JOBS") && (cd ../Native/librandomx && cp /tmp/RandomX/build/librandomx.a . && make clean && make -j"$BUILD_JOBS") && mv ../Native/librandomx/librandomx.so "$OutDir")
+((cd /tmp && rm -rf RandomARQ && git clone https://github.com/arqma/RandomARQ && cd RandomARQ && git checkout 3bcb6bafe63d70f8e6f78a0d431e71be2b638083 && mkdir build && cd build && cmake -DARCH=native -DCMAKE_C_FLAGS=-Wa,--noexecstack -DCMAKE_CXX_FLAGS=-Wa,--noexecstack .. && make -j"$BUILD_JOBS" randomx) && (cd ../Native/librandomarq && cp /tmp/RandomARQ/build/librandomx.a . && make clean && make -j"$BUILD_JOBS") && mv ../Native/librandomarq/librandomarq.so "$OutDir")
+((cd /tmp && rm -rf Panthera && git clone https://github.com/scala-network/Panthera && cd Panthera && mkdir build && cd build && cmake -DARCH=native .. && make -j"$BUILD_JOBS" randomx) && (cd ../Native/libpanthera && cp /tmp/Panthera/build/librandomx.a . && make clean && make -j"$BUILD_JOBS") && mv ../Native/libpanthera/libpanthera.so "$OutDir")

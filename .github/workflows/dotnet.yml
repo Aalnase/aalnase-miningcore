@@ -2,29 +2,65 @@ name: .NET
 
 on:
   push:
-    branches: [ master, dev ]
+    branches: [ main, master, dev ]
   pull_request:
-    branches: [ master, dev ]
+    branches: [ main, master, dev ]
 
 jobs:
-  build:
+  build-test:
+    runs-on: ubuntu-24.04
 
-    runs-on: ubuntu-22.04
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: miningcore_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d miningcore_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
-        fetch-depth: 0    
-    - name: Install Build dependencies
-      run: sudo apt-get install -y cmake cmake ninja-build build-essential libssl-dev pkg-config libboost-all-dev libsodium-dev libzmq5 libgmp-dev
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v2
+        fetch-depth: 0
+
+    - name: Install build dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          cmake \
+          ninja-build \
+          build-essential \
+          libssl-dev \
+          pkg-config \
+          libboost-all-dev \
+          libsodium-dev \
+          libzmq5 \
+          libzmq3-dev \
+          libgmp-dev \
+          libc++-dev \
+          zlib1g-dev
+
+    - name: Setup .NET 10
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: 10.0.x
+
     - name: Restore dependencies
       run: dotnet restore src
-    - name: Build
-      run: dotnet build --no-restore src
-    - name: Test
-      run: dotnet test --logger:"console;verbosity=detailed" --no-build --verbosity normal src
+
+    - name: Publish Miningcore on Ubuntu 24.04
+      run: dotnet publish src/Miningcore/Miningcore.csproj -c Release --framework net10.0 -o build
+
+    - name: Smoke-test published binary
+      run: ./build/Miningcore --version
+
+    - name: Test PostgreSQL 18 compatibility guard
+      run: dotnet test src/Miningcore.Tests/Miningcore.Tests.csproj -c Release --no-restore --filter PostgresVersionTests --logger:"console;verbosity=detailed"
