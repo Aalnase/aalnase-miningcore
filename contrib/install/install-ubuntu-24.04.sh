@@ -50,6 +50,27 @@ random_secret() {
   tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32
 }
 
+print_console_avatar() {
+  if [[ -t 1 ]]; then
+    printf '\033[1;33m'
+  fi
+  cat <<'AVATAR'
+
+        .--.        MFLEX POOL INSTALLER
+       /_  _\       Miningcore + Multiflex + HTTPS WebUI
+      | o  o |      mascot: penguin with the golden flex
+      |  __  |__
+      /\____/  `\
+     /  /  \   _/)
+    /__/____\_/`  
+       /_||_\      ready to mine
+
+AVATAR
+  if [[ -t 1 ]]; then
+    printf '\033[0m'
+  fi
+}
+
 prompt_required() {
   local var_name="$1"
   local prompt="$2"
@@ -61,6 +82,7 @@ prompt_required() {
 }
 
 collect_install_inputs() {
+  print_console_avatar
   cat <<'INTRO'
 
 Aalnase Miningcore + MFLEX installer

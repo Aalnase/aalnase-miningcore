@@ -44,7 +44,43 @@ a { color: inherit; }
 .status-pill.ok { color: var(--good); }
 .status-pill.warn { color: var(--warn); }
 .status-pill.bad { color: var(--bad); }
-.hero-copy { max-width: 780px; padding-top: 90px; }
+.hero-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 360px);
+  align-items: center;
+  gap: clamp(24px, 5vw, 72px);
+  padding-top: 72px;
+}
+.hero-copy { max-width: 780px; }
+.avatar-card {
+  margin: 0;
+  justify-self: end;
+  width: min(360px, 34vw);
+  min-width: 220px;
+  border: 1px solid var(--line);
+  border-radius: 32px;
+  padding: 18px 18px 14px;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(250, 204, 21, .32), transparent 44%),
+    linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.035));
+  box-shadow: 0 28px 90px rgba(0,0,0,.34), 0 0 70px rgba(250, 204, 21, .13);
+  backdrop-filter: blur(18px);
+}
+.avatar-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 20px 34px rgba(0,0,0,.42));
+}
+.avatar-card figcaption {
+  margin-top: 8px;
+  text-align: center;
+  color: #fde047;
+  font-weight: 900;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  font-size: 12px;
+}
 .eyebrow { margin: 0 0 10px; color: var(--accent-2); font-weight: 800; letter-spacing: .14em; text-transform: uppercase; font-size: 12px; }
 h1, h2 { margin: 0; line-height: 1.02; }
 h1 { font-size: clamp(44px, 8vw, 86px); letter-spacing: -.06em; }
@@ -97,11 +133,14 @@ dd { margin: 0; font-weight: 800; text-align: right; }
 footer { width: min(1180px, calc(100% - 36px)); margin: 0 auto 28px; font-size: 13px; }
 @media (max-width: 980px) {
   .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .hero-layout { grid-template-columns: 1fr; padding-top: 56px; }
+  .avatar-card { justify-self: start; width: min(300px, 70vw); }
   #connect, .two { grid-template-columns: 1fr; }
 }
 @media (max-width: 620px) {
   .hero { padding-bottom: 44px; }
-  .hero-copy { padding-top: 56px; }
+  .hero-layout { padding-top: 48px; }
+  .avatar-card { width: min(260px, 82vw); }
   .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .copy-row, .lookup, .topbar, footer { flex-direction: column; align-items: stretch; }
 }
