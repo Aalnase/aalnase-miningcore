@@ -336,7 +336,7 @@ with open(dst, 'w') as f:
     json.dump(data, f, indent=2)
     f.write('\n')
 PY
-  install -d -o miningcore -g miningcore /var/lib/miningcore
+  install -d -o miningcore -g miningcore -m 0750 /var/lib/miningcore
   chown root:miningcore /etc/miningcore/config.json
   chmod 640 /etc/miningcore/config.json
 }
