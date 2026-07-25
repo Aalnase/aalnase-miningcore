@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
-DOMAIN="${DOMAIN:-$(hostname -f 2>/dev/null || hostname)}"
+DOMAIN="${DOMAIN:-${WEBUI_DOMAIN:-}}"
+LETSENCRYPT_EMAIL="${LETSENCRYPT_EMAIL:-}"
 WEBROOT="${WEBROOT:-/var/www/miningcore-webui}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
@@ -8,6 +9,14 @@ SOURCE_DIR="${REPO_ROOT}/contrib/webui-simple"
 BACKUP_DIR="/root/backups/pre-webui-${DOMAIN}-$(date +%Y%m%d-%H%M%S)"
 log(){ printf "\n==> %s\n" "$*"; }
 
+if [[ -z "$DOMAIN" ]]; then
+  echo "DOMAIN or WEBUI_DOMAIN is required for HTTPS WebUI installation" >&2
+  exit 1
+fi
+if [[ -z "$LETSENCRYPT_EMAIL" ]]; then
+  echo "LETSENCRYPT_EMAIL is required for Let's Encrypt HTTPS" >&2
+  exit 1
+fi
 if [[ ! -d "$SOURCE_DIR" ]]; then
   echo "WebUI source directory not found: $SOURCE_DIR" >&2
   exit 1
@@ -91,19 +100,21 @@ log "Checking HTTP before certbot"
 curl -I --max-time 15 "http://${DOMAIN}/" || true
 curl -fsS --max-time 15 "http://${DOMAIN}/api/pools" | head -c 1000 || true; echo
 
-log "Issuing HTTPS certificate when DOMAIN resolves here"
+log "Issuing HTTPS certificate"
 PUBLIC_IP="$(curl -fsS --max-time 10 https://api.ipify.org || true)"
 DOMAIN_IPS="$(getent ahostsv4 "$DOMAIN" | awk '{print $1}' | sort -u | tr '\n' ' ' || true)"
-if [[ -n "$PUBLIC_IP" && " $DOMAIN_IPS " == *" $PUBLIC_IP "* ]]; then
-  sudo certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --register-unsafely-without-email --redirect
-  sudo nginx -t
-  sudo systemctl reload nginx
-else
-  echo "Skipping certbot: ${DOMAIN} does not resolve to this server (${PUBLIC_IP}); DNS has ${DOMAIN_IPS:-none}" >&2
+if [[ -z "$PUBLIC_IP" || " $DOMAIN_IPS " != *" $PUBLIC_IP "* ]]; then
+  echo "Cannot issue HTTPS certificate: ${DOMAIN} must resolve to this server before install continues." >&2
+  echo "This server public IPv4: ${PUBLIC_IP:-unknown}" >&2
+  echo "Domain IPv4 records: ${DOMAIN_IPS:-none}" >&2
+  exit 1
 fi
+sudo certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --email "$LETSENCRYPT_EMAIL" --redirect
+sudo nginx -t
+sudo systemctl reload nginx
 
 log "Final verification"
-curl -I --max-time 20 "http://${DOMAIN}/" || true
+curl -I --max-time 20 "https://${DOMAIN}/"
 echo
-curl -fsS --max-time 20 "http://${DOMAIN}/api/pools" | python3 -m json.tool | head -120 || true
-printf "\nBACKUP_DIR=%s\n" "$BACKUP_DIR"
+curl -fsS --max-time 20 "https://${DOMAIN}/api/pools" | python3 -m json.tool | head -120 || true
+printf "\nWEBUI_URL=https://%s/\nBACKUP_DIR=%s\n" "$DOMAIN" "$BACKUP_DIR"

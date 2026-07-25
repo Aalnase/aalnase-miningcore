@@ -216,12 +216,14 @@ Bare-metal installer:
 Non-interactive examples:
 
     sudo POOL_MODE=home ./contrib/install/install-ubuntu-24.04.sh
-    sudo POOL_MODE=public MFLEX_POOL_ADDRESS=M... ./contrib/install/install-ubuntu-24.04.sh
+    sudo POOL_MODE=public WEBUI_DOMAIN=pool.example.com LETSENCRYPT_EMAIL=admin@example.com ./contrib/install/install-ubuntu-24.04.sh
 
 The installer provides two profiles:
 
-- `public`: public internet pool defaults, payment processing enabled.
+- `public`: public internet pool defaults, payment processing enabled, API kept behind the HTTPS WebUI reverse proxy.
 - `home`: home/LAN pool defaults, API localhost-only, payment processing disabled by default.
+
+At the beginning, the installer asks for the pool mode, WebUI domain name, and Let's Encrypt email address. The WebUI is always installed, HTTPS is always enabled, Stratum stays on port `3333`, passwords/RPC secrets are generated automatically, and the MFLEX pool payout address is generated from the local `poolwallet` wallet.
 
 The installer runs as root for package/system setup, but the daemons do not run as root. Miningcore runs as the `miningcore` system user, Multiflex Core runs as the `multiflex` system user, `/opt` binaries stay root-owned, and service write access is limited to `/var/lib/...` and `/var/log/...`.
 

@@ -7,11 +7,11 @@ set -euo pipefail
 #   - PostgreSQL 18 and Miningcore schema/user
 #   - Miningcore under /opt/miningcore with systemd service
 #   - Multiflex Core from https://github.com/Aalnase/multiflexcoin under /opt/multiflexcoin
+#   - simple static WebUI with HTTPS via Let's Encrypt
 #
 # Usage:
 #   sudo ./contrib/install/install-ubuntu-24.04.sh
-#   sudo POOL_MODE=home ./contrib/install/install-ubuntu-24.04.sh
-#   sudo POOL_MODE=public MFLEX_POOL_ADDRESS=M... ./contrib/install/install-ubuntu-24.04.sh
+#   sudo POOL_MODE=public WEBUI_DOMAIN=pool.example.com LETSENCRYPT_EMAIL=admin@example.com ./contrib/install/install-ubuntu-24.04.sh
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 export DEBIAN_FRONTEND=noninteractive
@@ -50,28 +50,80 @@ random_secret() {
   tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32
 }
 
-ask_pool_mode() {
+prompt_required() {
+  local var_name="$1"
+  local prompt="$2"
+  local value="${!var_name:-}"
+  while [[ -z "$value" ]]; do
+    read -r -p "$prompt" value
+  done
+  export "$var_name=$value"
+}
+
+collect_install_inputs() {
+  cat <<'INTRO'
+
+Aalnase Miningcore + MFLEX installer
+------------------------------------
+The installer asks for the few values that must be known before the
+automated install starts. Passwords/RPC secrets are generated automatically
+and printed once at the end. The WebUI is always installed and HTTPS is
+always configured with Let's Encrypt, so the domain must already point to
+this server before you start.
+INTRO
+
   if [[ -n "${POOL_MODE:-}" ]]; then
     case "${POOL_MODE}" in
-      public|home) return ;;
+      public|home) ;;
       *) echo "POOL_MODE must be 'public' or 'home'" >&2; exit 1 ;;
+    esac
+  else
+    echo
+    echo "Pool mode:"
+    echo "  public - internet-facing pool; payments enabled; production-style defaults"
+    echo "  home   - LAN/home pool; payments disabled by default; conservative defaults"
+    read -r -p "Pool mode [public]: " choice
+    case "${choice:-public}" in
+      home|Home|HOME|2) POOL_MODE="home" ;;
+      *) POOL_MODE="public" ;;
     esac
   fi
 
-  echo "Select installation profile:"
-  echo "  1) public  - public internet pool, API can bind publicly, payments enabled"
-  echo "  2) home    - home/LAN pool, conservative defaults, API localhost only"
-  read -r -p "Profile [home]: " choice
-  case "${choice:-2}" in
-    1|public|Public|PUBLIC) POOL_MODE="public" ;;
-    *) POOL_MODE="home" ;;
-  esac
-  export POOL_MODE
+  echo
+  prompt_required WEBUI_DOMAIN "WebUI domain name, e.g. pool.example.com: "
+  prompt_required LETSENCRYPT_EMAIL "Let's Encrypt email address for HTTPS renewal notices: "
+
+  if [[ ! "$WEBUI_DOMAIN" =~ ^[A-Za-z0-9.-]+$ || "$WEBUI_DOMAIN" != *.* ]]; then
+    echo "WEBUI_DOMAIN must be a fully qualified domain name, got: $WEBUI_DOMAIN" >&2
+    exit 1
+  fi
+  if [[ ! "$LETSENCRYPT_EMAIL" =~ ^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$ ]]; then
+    echo "LETSENCRYPT_EMAIL does not look like a valid email address: $LETSENCRYPT_EMAIL" >&2
+    exit 1
+  fi
+
+  MININGCORE_POOL_PORT="${MININGCORE_POOL_PORT:-3333}"
+  MFLEX_WALLET_NAME="${MFLEX_WALLET_NAME:-poolwallet}"
+  export POOL_MODE WEBUI_DOMAIN LETSENCRYPT_EMAIL MININGCORE_POOL_PORT MFLEX_WALLET_NAME
+
+  cat <<EOF
+
+Install summary before automation starts:
+  Pool mode:        ${POOL_MODE}
+  WebUI domain:     ${WEBUI_DOMAIN}
+  HTTPS email:      ${LETSENCRYPT_EMAIL}
+  WebUI:            always installed
+  HTTPS:            always enabled
+  Stratum port:     ${MININGCORE_POOL_PORT}
+  MFLEX wallet:     ${MFLEX_WALLET_NAME}
+  MFLEX address:    generated automatically unless MFLEX_POOL_ADDRESS is set
+
+EOF
 }
 
 install_base_packages() {
   apt-get update
-  apt-get install -y --no-install-recommends ca-certificates curl gnupg lsb-release git sudo jq file
+  apt-get install -y --no-install-recommends ca-certificates curl gnupg lsb-release git sudo jq file nginx certbot python3-certbot-nginx rsync ufw
 
   if ! apt-cache show dotnet-sdk-10.0 >/dev/null 2>&1; then
     local ms_deb="/tmp/packages-microsoft-prod.deb"
@@ -246,12 +298,12 @@ EOF
 }
 
 generate_miningcore_config() {
-  local pool_wallet="${MFLEX_POOL_ADDRESS:-YOUR_MFLEX_POOL_WALLET_ADDRESS}"
+  local pool_wallet="${MFLEX_POOL_ADDRESS:?MFLEX_POOL_ADDRESS must be generated before Miningcore config is written}"
   local pool_port="${MININGCORE_POOL_PORT:-3333}"
   local api_address api_rate_disabled payment_enabled min_diff start_diff max_diff
 
   if [[ "${POOL_MODE}" == "public" ]]; then
-    api_address="*"
+    api_address="127.0.0.1"
     api_rate_disabled="false"
     payment_enabled="true"
     min_diff=512
@@ -330,6 +382,7 @@ pool['daemons'] = [{
     'port': int(os.environ['MFLEX_RPC_PORT']),
     'user': os.environ['MFLEX_RPC_USER'],
     'password': os.environ['MFLEX_RPC_PASSWORD'],
+    'httpPath': '/wallet/' + os.environ.get('MFLEX_WALLET_NAME', 'poolwallet'),
 }]
 pool['paymentProcessing']['enabled'] = '${payment_enabled}' == 'true'
 with open(dst, 'w') as f:
@@ -348,40 +401,106 @@ install_systemd_units() {
   systemctl enable multiflexd miningcore
 }
 
+multiflex_cli() {
+  /opt/multiflexcoin/bin/multiflex-cli -conf=/etc/multiflexcoin/multiflex.conf -datadir=/var/lib/multiflexcoin "$@"
+}
+
+multiflex_wallet_cli() {
+  /opt/multiflexcoin/bin/multiflex-cli -conf=/etc/multiflexcoin/multiflex.conf -datadir=/var/lib/multiflexcoin -rpcwallet="${MFLEX_WALLET_NAME}" "$@"
+}
+
+start_multiflex_and_generate_pool_address() {
+  systemctl start multiflexd
+  echo "Waiting for Multiflex RPC..."
+  local i
+  for i in $(seq 1 120); do
+    if multiflex_cli getblockchaininfo >/dev/null 2>&1; then
+      break
+    fi
+    sleep 2
+  done
+  if ! multiflex_cli getblockchaininfo >/dev/null 2>&1; then
+    echo "Multiflex RPC did not become ready within 240 seconds" >&2
+    journalctl -u multiflexd -n 80 --no-pager || true
+    exit 1
+  fi
+
+  if [[ -n "${MFLEX_POOL_ADDRESS:-}" ]]; then
+    echo "Using operator-provided MFLEX pool address: ${MFLEX_POOL_ADDRESS}"
+    export MFLEX_POOL_ADDRESS
+    return
+  fi
+
+  if ! multiflex_wallet_cli getwalletinfo >/dev/null 2>&1; then
+    echo "Creating/loading MFLEX wallet '${MFLEX_WALLET_NAME}' for pool payouts..."
+    multiflex_cli loadwallet "${MFLEX_WALLET_NAME}" >/dev/null 2>&1 \
+      || multiflex_cli createwallet "${MFLEX_WALLET_NAME}" false false "" false true >/dev/null 2>&1 \
+      || multiflex_cli createwallet "${MFLEX_WALLET_NAME}" >/dev/null
+  fi
+
+  MFLEX_POOL_ADDRESS="$(multiflex_wallet_cli getnewaddress "" legacy 2>/dev/null || multiflex_wallet_cli getnewaddress)"
+  export MFLEX_POOL_ADDRESS
+
+  if ! multiflex_wallet_cli getaddressinfo "$MFLEX_POOL_ADDRESS" | jq -e '.ismine == true' >/dev/null 2>&1; then
+    echo "Generated MFLEX address is not reported as wallet-owned: ${MFLEX_POOL_ADDRESS}" >&2
+    exit 1
+  fi
+  echo "Generated MFLEX pool payout address: ${MFLEX_POOL_ADDRESS}"
+}
+
+configure_firewall() {
+  ufw allow "${MININGCORE_POOL_PORT:-3333}/tcp" comment "Miningcore MFLEX stratum" >/dev/null || true
+  ufw allow "${MFLEX_P2P_PORT:-24200}/tcp" comment "Multiflex P2P" >/dev/null || true
+}
+
+install_webui_https() {
+  DOMAIN="$WEBUI_DOMAIN" LETSENCRYPT_EMAIL="$LETSENCRYPT_EMAIL" WEBROOT="${WEBROOT:-/var/www/miningcore-webui}" \
+    "$REPO_ROOT/contrib/install/install-webui-simple.sh"
+}
+
+start_miningcore() {
+  systemctl start miningcore
+}
+
 print_summary() {
   cat <<EOF
 
 Installation complete.
 
-Profile: ${POOL_MODE}
+WebUI URL: https://${WEBUI_DOMAIN}/
+Pool mode: ${POOL_MODE}
 Miningcore: /opt/miningcore
 Miningcore config: /etc/miningcore/config.json
 Multiflex Core: /opt/multiflexcoin
 Multiflex config: /etc/multiflexcoin/multiflex.conf
 
-Start services:
-  sudo systemctl start multiflexd
-  sudo systemctl start miningcore
+Generated values printed once for operator handoff:
+  PostgreSQL database: ${MININGCORE_DB_NAME}
+  PostgreSQL user:     ${MININGCORE_DB_USER}
+  PostgreSQL password: ${MININGCORE_DB_PASSWORD}
+  MFLEX RPC user:      ${MFLEX_RPC_USER}
+  MFLEX RPC password:  ${MFLEX_RPC_PASSWORD}
+  MFLEX RPC port:      ${MFLEX_RPC_PORT}
+  MFLEX wallet name:   ${MFLEX_WALLET_NAME}
+  MFLEX pool address:  ${MFLEX_POOL_ADDRESS}
+  Miningcore port:     ${MININGCORE_POOL_PORT:-3333}
 
-Check status:
+Services:
   sudo systemctl status multiflexd --no-pager
   sudo systemctl status miningcore --no-pager
   journalctl -u multiflexd -f
   journalctl -u miningcore -f
 
-MFLEX RPC user: ${MFLEX_RPC_USER}
-MFLEX RPC port: ${MFLEX_RPC_PORT}
-Miningcore pool port: ${MININGCORE_POOL_PORT:-3333}
-
-IMPORTANT: Replace YOUR_MFLEX_POOL_WALLET_ADDRESS in /etc/miningcore/config.json
-with a real MFLEX pool payout address before public production use.
+Important: copy these generated passwords now if you need them. They are
+also present in root-readable service config files, but this summary is the
+only place the installer intentionally prints them.
 EOF
 }
 
 main() {
   require_root
   require_ubuntu_24_plus
-  ask_pool_mode
+  collect_install_inputs
   install_base_packages
   install_postgresql18
   setup_users
@@ -389,8 +508,12 @@ main() {
   build_install_miningcore
   build_install_multiflexcoin
   generate_multiflex_conf
-  generate_miningcore_config
   install_systemd_units
+  start_multiflex_and_generate_pool_address
+  generate_miningcore_config
+  configure_firewall
+  start_miningcore
+  install_webui_https
   print_summary
 }
 
