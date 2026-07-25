@@ -50,6 +50,47 @@ random_secret() {
   tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32
 }
 
+default_build_jobs() {
+  if [[ -n "${BUILD_JOBS:-}" ]]; then
+    echo "$BUILD_JOBS"
+    return
+  fi
+
+  local mem_kb cpus
+  mem_kb="$(awk '/MemTotal:/ {print $2}' /proc/meminfo)"
+  cpus="$(nproc)"
+  if (( mem_kb < 4000000 )); then
+    echo 1
+  elif (( cpus < 2 )); then
+    echo 1
+  else
+    echo 2
+  fi
+}
+
+ensure_build_swap() {
+  local mem_kb swap_kb total_kb swapfile
+  mem_kb="$(awk '/MemTotal:/ {print $2}' /proc/meminfo)"
+  swap_kb="$(awk '/SwapTotal:/ {print $2}' /proc/meminfo)"
+  total_kb=$((mem_kb + swap_kb))
+  swapfile="${INSTALL_SWAPFILE:-/swapfile-aalnase-build}"
+
+  if (( total_kb >= 6000000 )); then
+    return
+  fi
+  if swapon --show=NAME --noheadings | grep -qx "$swapfile"; then
+    return
+  fi
+
+  echo "Low build memory detected; creating temporary 4G swap at ${swapfile} for native library compilation..."
+  if [[ ! -e "$swapfile" ]]; then
+    fallocate -l 4G "$swapfile" 2>/dev/null || dd if=/dev/zero of="$swapfile" bs=1M count=4096 status=progress
+    chmod 600 "$swapfile"
+    mkswap "$swapfile" >/dev/null
+  fi
+  swapon "$swapfile"
+}
+
 print_console_avatar() {
   if [[ -t 1 ]]; then
     printf '\033[1;33m'
@@ -237,12 +278,15 @@ SQL
 }
 
 build_install_miningcore() {
+  ensure_build_swap
+  local jobs
+  jobs="$(default_build_jobs)"
   install -d -o root -g root -m 0755 /opt/miningcore
   install -d -o root -g miningcore -m 0750 /etc/miningcore
   install -d -o miningcore -g miningcore -m 0750 /var/lib/miningcore /var/log/miningcore
 
-  echo "Publishing Miningcore (.NET 10). This also builds native hashing libraries..."
-  (cd "$REPO_ROOT" && BUILD_JOBS="${BUILD_JOBS:-$(nproc)}" dotnet publish src/Miningcore/Miningcore.csproj \
+  echo "Publishing Miningcore (.NET 10). This also builds native hashing libraries with BUILD_JOBS=${jobs}..."
+  (cd "$REPO_ROOT" && BUILD_JOBS="$jobs" CMAKE_BUILD_PARALLEL_LEVEL="$jobs" dotnet publish src/Miningcore/Miningcore.csproj \
     -c Release --framework net10.0 -o /opt/miningcore)
 
   harden_tree_readonly /opt/miningcore
@@ -254,6 +298,8 @@ build_install_multiflexcoin() {
   local src_dir="${MFLEX_SOURCE_DIR:-/usr/local/src/multiflexcoin}"
   local repo_url="${MFLEX_REPO_URL:-https://github.com/Aalnase/multiflexcoin.git}"
   local branch="${MFLEX_BRANCH:-main}"
+  local jobs
+  jobs="$(default_build_jobs)"
 
   install -d -o root -g root -m 0755 /usr/local/src /opt/multiflexcoin
   install -d -o root -g multiflex -m 0750 /etc/multiflexcoin
@@ -267,8 +313,8 @@ build_install_multiflexcoin() {
     git -C "$src_dir" reset --hard "origin/$branch"
   fi
 
-  echo "Building Multiflex Core from source. This can take a while..."
-  (cd "$src_dir" && make -C depends -j"${BUILD_JOBS:-$(nproc)}")
+  echo "Building Multiflex Core from source with BUILD_JOBS=${jobs}. This can take a while..."
+  (cd "$src_dir" && make -C depends -j"$jobs")
   local toolchain
   toolchain="$(find "$src_dir/depends" -path '*/toolchain.cmake' | head -n1)"
   if [[ -z "$toolchain" ]]; then
@@ -277,7 +323,7 @@ build_install_multiflexcoin() {
   fi
   cmake -S "$src_dir" -B "$src_dir/build" --toolchain "$toolchain" \
     -DCMAKE_BUILD_TYPE=Release -DBUILD_GUI=OFF -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF
-  cmake --build "$src_dir/build" --parallel "${BUILD_JOBS:-$(nproc)}" --target bitcoind bitcoin-cli
+  cmake --build "$src_dir/build" --parallel "$jobs" --target bitcoind bitcoin-cli
   # Install only the daemon and CLI components. Installing all components would
   # also try to install the optional wrapper binary, which is disabled in this
   # build and may not exist.
